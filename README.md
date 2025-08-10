@@ -1,6 +1,7 @@
 # Sonic Robo Blast 2 BDM-Edit
 basically a "fork" of srb2 that basically adds merge/pull requests that seems good enough to add.
 # Compiling
+also you cant use cmake to compile, im sorry
 > if your using MINGW32 to compile this, IT WILL NOT WORK!!!
 * instead, uninstall and reinstall MSYS2, and open up MINGW64 and you MUST install the required dependencies, Otherwise it will not work!
 
