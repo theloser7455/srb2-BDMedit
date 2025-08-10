@@ -1,22 +1,12 @@
-# Sonic Robo Blast 2
-[![latest release](https://badgen.net/github/release/STJr/SRB2/stable)](https://github.com/STJr/SRB2/releases/latest)
-
-[![Build status](https://ci.appveyor.com/api/projects/status/399d4hcw9yy7hg2y?svg=true)](https://ci.appveyor.com/project/STJr/srb2)
-[![Build status](https://travis-ci.org/STJr/SRB2.svg?branch=master)](https://travis-ci.org/STJr/SRB2)
-[![CircleCI](https://circleci.com/gh/STJr/SRB2/tree/master.svg?style=svg)](https://circleci.com/gh/STJr/SRB2/tree/master)
-
-[Sonic Robo Blast 2](https://srb2.org/) is a 3D Sonic the Hedgehog fangame based on a modified version of [Doom Legacy](http://doomlegacy.sourceforge.net/).
-
-## Dependencies
-- SDL2 (Linux/OS X only)
-- SDL2-Mixer (Linux/OS X only)
-- libupnp (Linux/OS X only)
-- libgme (Linux/OS X only)
-- libopenmpt (Linux/OS X only)
-
-## Compiling
-
-See [SRB2 Wiki/Source code compiling](http://wiki.srb2.org/wiki/Source_code_compiling)
-
-## Disclaimer
-Sonic Team Junior is in no way affiliated with SEGA or Sonic Team. We do not claim ownership of any of SEGA's intellectual property used in SRB2.
+# Sonic Robo Blast 2 BDM-Edit
+basically a "fork" of srb2 that basically adds merge/pull requests that seems good enough to add.
+# Compiling
+> if your using MINGW32 to compile this, IT WILL NOT WORK!!!
+instead uninstall and reinstall MSYS2, and open up MINGW64 and you install required dependencies, Otherwise it will not work!
+  ```pacman -S git make mingw-w64-x86_64-gcc```
+# Changes & Pull/Merge requests i added
+* Removed APNG support since it was useless
+* Port Namechanges From srb2classic (!2687 from SRB2 gitlab)
+* Add menu for custom console variables (!2407 on SRB2 gitlab)
+* Fixed all incompatible inpointer types
+and theres alot more i have to list but im not gonna bother doing the rest.
