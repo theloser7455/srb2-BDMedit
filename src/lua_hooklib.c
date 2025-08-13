@@ -977,15 +977,18 @@ int LUA_HookBotAI(mobj_t *sonic, mobj_t *tails, ticcmd_t *cmd)
 
 void LUA_HookLinedefExecute(line_t *line, mobj_t *mo, sector_t *sector)
 {
+	char* s = Z_StrDup(line->stringargs[0]);
+	strupr(s);
 	Hook_State hook;
 	if (prepare_string_hook
-			(&hook, 0, STRING_HOOK(LinedefExecute), line->stringargs[0]))
+		(&hook, 0, STRING_HOOK(LinedefExecute), s))
 	{
 		LUA_PushUserdata(gL, line, META_LINE);
 		LUA_PushUserdata(gL, mo, META_MOBJ);
 		LUA_PushUserdata(gL, sector, META_SECTOR);
 		ps_lua_mobjhooks.value.i += call_hooks(&hook, 0, res_none);
 	}
+	Z_Free(s);
 }
 
 int LUA_HookPlayerMsg(int source, int target, int flags, char *msg)

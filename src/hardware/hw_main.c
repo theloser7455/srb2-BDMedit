@@ -3142,7 +3142,13 @@ static void HWR_SplitSprite(gl_vissprite_t* spr)
 		if (!occlusion) use_linkdraw_hack = true;
 	}
 
-	Surf.PolyColor.s.alpha = FixedMul(newalpha, Surf.PolyColor.s.alpha);
+	if (cv_translucency.value && newalpha < FRACUNIT)
+	{
+		// TODO: The ternary operator is a hack to make alpha values roughly match what their FF_TRANSMASK equivalent would be
+		// See if there's a better way of doing this
+		Surf.PolyColor.s.alpha = min(FixedMul(newalpha, Surf.PolyColor.s.alpha == 0xFF ? 256 : Surf.PolyColor.s.alpha), 0xFF);
+		blend = HWR_GetBlendModeFlag(blendmode);
+	}
 
 	if (HWR_UseShader())
 	{
@@ -3642,7 +3648,13 @@ static void HWR_DrawSprite(gl_vissprite_t* spr)
 			if (!occlusion) use_linkdraw_hack = true;
 		}
 
-		Surf.PolyColor.s.alpha = FixedMul(newalpha, Surf.PolyColor.s.alpha);
+		if (cv_translucency.value && newalpha < FRACUNIT)
+		{
+			// TODO: The ternary operator is a hack to make alpha values roughly match what their FF_TRANSMASK equivalent would be
+			// See if there's a better way of doing this
+			Surf.PolyColor.s.alpha = min(FixedMul(newalpha, Surf.PolyColor.s.alpha == 0xFF ? 256 : Surf.PolyColor.s.alpha), 0xFF);
+			blend = HWR_GetBlendModeFlag(blendmode);
+		}
 
 		if (spr->renderflags & RF_SHADOWEFFECTS)
 		{
@@ -4309,6 +4321,7 @@ static void HWR_ProjectSprite(mobj_t* thing)
 	float x1, x2;
 	float rightsin, rightcos;
 	float this_scale, this_xscale, this_yscale;
+	fixed_t highresscale;
 	float spritexscale, spriteyscale;
 	float shadowheight = 1.0f, shadowscale = 1.0f;
 	float gz, gzt;
@@ -4504,7 +4517,15 @@ static void HWR_ProjectSprite(mobj_t* thing)
 	}
 
 	if (thing->skin && ((skin_t*)thing->skin)->flags & SF_HIRES)
-		this_scale *= FIXED_TO_FLOAT(((skin_t*)thing->skin)->highresscale);
+	{
+		float hi_res = ((skin_t*)thing->skin)->highresscale;
+		this_scale *= FIXED_TO_FLOAT(hi_res);
+		highresscale = hi_res;
+	}
+	else
+	{
+		highresscale = FRACUNIT;
+	}
 
 	spr_width = spritecachedinfo[lumpoff].width;
 	spr_height = spritecachedinfo[lumpoff].height;
@@ -4555,8 +4576,8 @@ static void HWR_ProjectSprite(mobj_t* thing)
 		if ((thing->renderflags & RF_FLIPOFFSETS) && flip)
 			flipoffset = -1;
 
-		spr_offset += interp.spritexoffset * flipoffset;
-		spr_topoffset += interp.spriteyoffset * flipoffset;
+		spr_offset += FixedDiv(interp.spritexoffset, highresscale) * flipoffset;
+		spr_topoffset += FixedDiv(interp.spriteyoffset, highresscale) * flipoffset;
 	}
 
 	if (papersprite)
