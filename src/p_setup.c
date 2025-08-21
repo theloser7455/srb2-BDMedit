@@ -7970,7 +7970,8 @@ boolean P_LoadLevel(boolean fromnetsave, boolean reloadinggamestate)
 		G_StopMetalDemo();
 
 	// Clear CECHO messages
-	HU_ClearCEcho();
+	if (!reloadinggamestate)
+		HU_ClearCEcho();
 
 	if (mapheaderinfo[gamemap-1]->runsoc[0] != '#')
 		P_RunSOC(mapheaderinfo[gamemap-1]->runsoc);
@@ -8027,7 +8028,7 @@ boolean P_LoadLevel(boolean fromnetsave, boolean reloadinggamestate)
 		}
 		G_ClearModeAttackRetryFlag();
 	}
-	else if (rendermode != render_none && G_IsSpecialStage(gamemap))
+	else if (rendermode != render_none && G_IsSpecialStage(gamemap) && !reloadinggamestate)
 	{
 		P_RunSpecialStageWipe();
 		ranspecialwipe = 1;

@@ -1405,7 +1405,7 @@ static int lib_pPlayerCanDamage(lua_State *L)
 	INLEVEL
 	if (!player)
 		return LUA_ErrInvalid(L, "player_t");
-	if (!thing)
+	if (P_MobjWasRemoved(thing))
 		return LUA_ErrInvalid(L, "mobj_t");
 	lua_pushboolean(L, P_PlayerCanDamage(player, thing));
 	return 1;
@@ -1946,7 +1946,7 @@ static int lib_pDoTailsOverlay(lua_State *L)
 	INLEVEL
 	if (!player)
 		return LUA_ErrInvalid(L, "player_t");
-	if (!tails)
+	if (P_MobjWasRemoved(tails))
 		return LUA_ErrInvalid(L, "mobj_t");
 	P_DoTailsOverlay(player, tails);
 	return 0;
@@ -1960,7 +1960,7 @@ static int lib_pDoMetalJetFume(lua_State *L)
 	INLEVEL
 	if (!player)
 		return LUA_ErrInvalid(L, "player_t");
-	if (!fume)
+	if (P_MobjWasRemoved(fume))
 		return LUA_ErrInvalid(L, "mobj_t");
 	P_DoMetalJetFume(player, fume);
 	return 0;
@@ -1974,7 +1974,7 @@ static int lib_pDoFollowMobj(lua_State *L)
 	INLEVEL
 	if (!player)
 		return LUA_ErrInvalid(L, "player_t");
-	if (!followmobj)
+	if (P_MobjWasRemoved(followmobj))
 		return LUA_ErrInvalid(L, "mobj_t");
 	P_DoFollowMobj(player, followmobj);
 	return 0;
@@ -2011,7 +2011,7 @@ static int lib_pCheckPosition(lua_State *L)
 	fixed_t y = luaL_checkfixed(L, 3);
 	NOHUD
 	INLEVEL
-	if (!thing)
+	if (P_MobjWasRemoved(thing))
 		return LUA_ErrInvalid(L, "mobj_t");
 	lua_pushboolean(L, P_CheckPosition(thing, x, y));
 	LUA_PushUserdata(L, tmthing, META_MOBJ);
@@ -2028,7 +2028,7 @@ static int lib_pTryMove(lua_State *L)
 	boolean allowdropoff = lua_optboolean(L, 4);
 	NOHUD
 	INLEVEL
-	if (!thing)
+	if (P_MobjWasRemoved(thing))
 		return LUA_ErrInvalid(L, "mobj_t");
 	lua_pushboolean(L, P_TryMove(thing, x, y, allowdropoff));
 	LUA_PushUserdata(L, tmthing, META_MOBJ);
@@ -2043,7 +2043,7 @@ static int lib_pMove(lua_State *L)
 	fixed_t speed = luaL_checkfixed(L, 2);
 	NOHUD
 	INLEVEL
-	if (!actor)
+	if (P_MobjWasRemoved(actor))
 		return LUA_ErrInvalid(L, "mobj_t");
 	lua_pushboolean(L, P_Move(actor, speed));
 	LUA_PushUserdata(L, tmthing, META_MOBJ);
@@ -2061,7 +2061,7 @@ static int lib_pTeleportMove(lua_State *L)
 	fixed_t z = luaL_checkfixed(L, 4);
 	NOHUD
 	INLEVEL
-	if (!thing)
+	if (P_MobjWasRemoved(thing))
 		return LUA_ErrInvalid(L, "mobj_t");
 	LUA_Deprecated(L, "P_TeleportMove", "P_SetOrigin\" or \"P_MoveOrigin");
 	lua_pushboolean(L, P_MoveOrigin(thing, x, y, z));
@@ -2079,7 +2079,7 @@ static int lib_pSetOrigin(lua_State *L)
 	fixed_t z = luaL_checkfixed(L, 4);
 	NOHUD
 	INLEVEL
-	if (!thing)
+	if (P_MobjWasRemoved(thing))
 		return LUA_ErrInvalid(L, "mobj_t");
 	lua_pushboolean(L, P_SetOrigin(thing, x, y, z));
 	LUA_PushUserdata(L, tmthing, META_MOBJ);
@@ -2096,7 +2096,7 @@ static int lib_pMoveOrigin(lua_State *L)
 	fixed_t z = luaL_checkfixed(L, 4);
 	NOHUD
 	INLEVEL
-	if (!thing)
+	if (P_MobjWasRemoved(thing))
 		return LUA_ErrInvalid(L, "mobj_t");
 	lua_pushboolean(L, P_MoveOrigin(thing, x, y, z));
 	LUA_PushUserdata(L, tmthing, META_MOBJ);
@@ -2110,7 +2110,7 @@ static int lib_pLineIsBlocking(lua_State *L)
 	line_t *line = *((line_t **)luaL_checkudata(L, 2, META_LINE));
 	NOHUD
 	INLEVEL
-	if (!mo)
+	if (P_MobjWasRemoved(mo))
 		return LUA_ErrInvalid(L, "mobj_t");
 	if (!line)
 		return LUA_ErrInvalid(L, "line_t");

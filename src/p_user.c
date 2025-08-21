@@ -10717,11 +10717,6 @@ boolean P_SpectatorJoinGame(player_t *player)
 		if (!LUA_HookTeamSwitch(player, changeto, true, false, false))
 			return false;
 
-		if (player->mo)
-		{
-			P_RemoveMobj(player->mo);
-			player->mo = NULL;
-		}
 		player->spectator = false;
 		player->ctfteam = changeto;
 		player->playerstate = PST_REBORN;
@@ -10751,11 +10746,7 @@ boolean P_SpectatorJoinGame(player_t *player)
 		{
 			if (!LUA_HookTeamSwitch(player, 3, true, false, false))
 				return false;
-			if (player->mo)
-			{
-				P_RemoveMobj(player->mo);
-				player->mo = NULL;
-			}
+
 			player->spectator = player->outofcoop = false;
 			player->playerstate = PST_REBORN;
 

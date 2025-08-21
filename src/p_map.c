@@ -4888,7 +4888,7 @@ void P_CreateSecNodeList(mobj_t *thing, fixed_t x, fixed_t y)
 	* And for tmbbox - cph 2003/08/10 */
 	tmx = saved_tmx, tmy = saved_tmy;
 
-	if (tmthing)
+	if (!P_MobjWasRemoved(tmthing))
 	{
 		tmbbox[BOXTOP]  = tmy + tmthing->radius;
 		tmbbox[BOXBOTTOM] = tmy - tmthing->radius;

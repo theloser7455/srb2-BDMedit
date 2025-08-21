@@ -2087,8 +2087,7 @@ static boolean ViewpointSwitchResponder(event_t *ev)
 		// Other Tag-based gametypes?
 		else if (G_TagGametype())
 		{
-			if (!players[consoleplayer].spectator
-				&& (players[consoleplayer].pflags & PF_TAGIT) != (players[displayplayer].pflags & PF_TAGIT))
+			if (!players[consoleplayer].spectator && !(players[displayplayer].pflags & PF_TAGIT))
 				continue;
 		}
 		else if (G_GametypeHasSpectators() && G_RingSlingerGametype())
