@@ -11262,7 +11262,8 @@ void P_RemoveMobj(mobj_t *mobj)
 	// Saved to avoid being scrambled like below...
 	mobj->thinker.debug_mobjtype = mobj->type;
 #endif
-
+	//free block
+	P_RemoveThinker((thinker_t*)mobj);
 	// DBG: set everything in mobj_t to 0xFF instead of leaving it. debug memory error.
 #ifdef SCRAMBLE_REMOVED
 	// Invalidate mobj_t data to cause crashes if accessed!
@@ -11280,9 +11281,6 @@ void P_RemovePrecipMobj(precipmobj_t *mobj)
 		P_DelPrecipSeclist(precipsector_list);
 		precipsector_list = NULL;
 	}
-
-	// free block
-	P_RemoveThinker((thinker_t *)mobj);
 }
 
 // Clearing out stuff for savegames
