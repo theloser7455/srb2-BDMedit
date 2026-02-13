@@ -30,12 +30,48 @@ UINT16 slopecount = 0;
 
 static void P_UpdateMidtextureSlopesForSector(sector_t *sector);
 
+// Calculate light
+void P_UpdateSlopeLightOffset(pslope_t *slope)
+{
+	const boolean ceiling = (slope->normal.z < 0);
+	const UINT8 contrast = 16;
+
+	fixed_t contrastFixed = (contrast * FRACUNIT);
+	fixed_t zMul = FRACUNIT;
+	angle_t slopeDir = ANGLE_MAX;
+	fixed_t extralight = 0;
+
+	if (slope->normal.z == 0)
+	{
+		slope->lightOffset = 0;
+		return;
+	}
+
+	slopeDir = R_PointToAngle2(0, 0, abs(slope->normal.y), abs(slope->normal.x));
+	if (ceiling == true)
+	{
+		slopeDir ^= ANGLE_180;
+	}
+
+	zMul = min(FRACUNIT, abs(slope->zdelta)*3/2); // *3/2, to make 60 degree slopes match walls.
+	contrastFixed = FixedMul(contrastFixed, zMul);
+	extralight = -contrastFixed + FixedMul(FixedDiv(AngleFixed(slopeDir), 90*FRACUNIT), (contrastFixed * 2));
+
+
+	// Between -2 and 2 for software, -16 and 16 for hardware
+	slope->lightOffset = FixedFloor((extralight / 8) + (FRACUNIT / 2)) / FRACUNIT;
+#ifdef HWRENDER
+	slope->hwLightOffset = FixedFloor(extralight + (FRACUNIT / 2)) / FRACUNIT;
+#endif
+}
+
 // Calculate line normal
 void P_CalculateSlopeNormal(pslope_t *slope)
 {
 	slope->normal.z = FINECOSINE(slope->zangle>>ANGLETOFINESHIFT);
 	slope->normal.x = FixedMul(FINESINE(slope->zangle>>ANGLETOFINESHIFT), slope->d.x);
 	slope->normal.y = FixedMul(FINESINE(slope->zangle>>ANGLETOFINESHIFT), slope->d.y);
+	P_UpdateSlopeLightOffset(slope);
 }
 
 static void CalculateNormalDir(pslope_t *slope, dvector3_t *dnormal)
@@ -122,6 +158,7 @@ static void ReconfigureViaVertexes (pslope_t *slope, const vector3_t v1, const v
 	}
 
 	P_CalculateSlopeVectors(slope);
+	P_UpdateSlopeLightOffset(slope);
 }
 
 /// Setup slope via constants.
@@ -174,6 +211,7 @@ static void ReconfigureViaConstants (pslope_t *slope, const double pa, const dou
 	DVector3_Load(&slope->dorigin, 0, 0, d_o);
 
 	CalculateNormalDir(slope, &dnormal);
+	P_UpdateSlopeLightOffset(slope);
 }
 
 /// Recalculate dynamic slopes.
@@ -665,6 +703,7 @@ static void SpawnVertexSlopes(void)
 		else
 			v3 = l2->v2;
 
+		// Set Floor Slope
 		if (v1->floorzset || v2->floorzset || v3->floorzset)
 		{
 			vector3_t vtx[3] = {
@@ -674,9 +713,14 @@ static void SpawnVertexSlopes(void)
 			pslope_t *slop = Slope_Add(0);
 			sc->f_slope = slop;
 			sc->hasslope = true;
+			
+			if (sc->specialflags & SSF_NOPHYSICSFLOOR)
+				sc->f_slope->flags |= SL_NOPHYSICS;
+
 			ReconfigureViaVertexes(slop, vtx[0], vtx[1], vtx[2]);
 		}
 
+		// Set Ceiling Slope
 		if (v1->ceilingzset || v2->ceilingzset || v3->ceilingzset)
 		{
 			vector3_t vtx[3] = {
@@ -686,6 +730,10 @@ static void SpawnVertexSlopes(void)
 			pslope_t *slop = Slope_Add(0);
 			sc->c_slope = slop;
 			sc->hasslope = true;
+			
+			if (sc->specialflags & SSF_NOPHYSICSCEILING)
+				sc->c_slope->flags |= SL_NOPHYSICS;		
+
 			ReconfigureViaVertexes(slop, vtx[0], vtx[1], vtx[2]);
 		}
 	}

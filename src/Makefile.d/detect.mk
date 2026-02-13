@@ -3,7 +3,6 @@
 #
 
 # Previously featured:\
-	PANDORA\
 	DUMMY\
 	DJGPPDOS\
 	SOLARIS\

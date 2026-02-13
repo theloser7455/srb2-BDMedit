@@ -159,7 +159,9 @@ typedef enum
 	MF_GRENADEBOUNCE    = 1<<28,
 	// Run the action thinker on spawn.
 	MF_RUNSPAWNFUNC     = 1<<29,
-	// free: 1<<30 and 1<<31
+	// The mobj can be paralooped.
+	MF_PARALOOPABLE     = 1<<30,
+	// free: 1<<31
 } mobjflag_t;
 
 typedef enum
@@ -269,8 +271,6 @@ typedef enum {
 	PCF_MOVINGFOF = 8,
 	// Is rain.
 	PCF_RAIN = 16,
-	// Ran the thinker this tic.
-	PCF_THUNK = 32,
 } precipflag_t;
 
 // [RH] Like msecnode_t, but for the blockmap
@@ -485,6 +485,8 @@ typedef struct precipmobj_s
 	INT32 tics; // state tic counter
 	state_t *state;
 	INT32 flags; // flags from mobjinfo tables
+
+	tic_t lastupdatetime;
 } precipmobj_t;
 
 typedef struct actioncache_s

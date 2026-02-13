@@ -6953,7 +6953,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		100,            // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_SLIDEME | MF_SPECIAL | MF_NOGRAVITY | MF_NOCLIPHEIGHT, // flags
+		MF_SLIDEME | MF_SPECIAL | MF_NOGRAVITY | MF_NOCLIPHEIGHT | MF_PARALOOPABLE, // flags
 		S_NULL          // raisestate
 	},
 
@@ -7007,7 +7007,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		100,            // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_SLIDEME | MF_SPECIAL | MF_NOGRAVITY | MF_NOCLIPHEIGHT, // flags
+		MF_SLIDEME | MF_SPECIAL | MF_NOGRAVITY | MF_NOCLIPHEIGHT | MF_PARALOOPABLE, // flags
 		S_BLUESPHEREBONUS // raisestate
 	},
 
@@ -7061,7 +7061,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		100,            // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_SLIDEME | MF_SPECIAL | MF_NOGRAVITY | MF_NOCLIPHEIGHT, // flags
+		MF_SLIDEME | MF_SPECIAL | MF_NOGRAVITY | MF_NOCLIPHEIGHT | MF_PARALOOPABLE, // flags
 		S_NULL          // raisestate
 	},
 
@@ -19131,7 +19131,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 			100,            // mass
 			0,              // damage
 			sfx_None,       // activesound
-			MF_SLIDEME | MF_SPECIAL | MF_NOGRAVITY, // flags
+			MF_SLIDEME | MF_SPECIAL | MF_NOGRAVITY | MF_PARALOOPABLE, // flags
 			S_NULL          // raisestate
 		},
 
@@ -19967,7 +19967,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 			4,              // mass
 			0,              // damage
 			sfx_None,       // activesound
-			MF_SLIDEME | MF_SPECIAL | MF_NOGRAVITY | MF_NOCLIPHEIGHT, // flags
+			MF_SLIDEME | MF_SPECIAL | MF_NOGRAVITY | MF_NOCLIPHEIGHT | MF_PARALOOPABLE, // flags
 			S_NIGHTSCHIPBONUS // raisestate
 		},
 
@@ -20021,7 +20021,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 			4,              // mass
 			0,              // damage
 			sfx_None,       // activesound
-			MF_SLIDEME | MF_SPECIAL | MF_NOGRAVITY | MF_NOCLIPHEIGHT, // flags
+			MF_SLIDEME | MF_SPECIAL | MF_NOGRAVITY | MF_NOCLIPHEIGHT | MF_PARALOOPABLE, // flags
 			S_NULL          // raisestate
 		},
 
