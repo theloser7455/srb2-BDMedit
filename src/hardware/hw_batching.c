@@ -1,6 +1,6 @@
 // SONIC ROBO BLAST 2
 //-----------------------------------------------------------------------------
-// Copyright (C) 2020-2024 by Sonic Team Junior.
+// Copyright (C) 2020-2026 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -31,7 +31,6 @@ int finalVertexArrayAllocSize = 65536;
 
 PolygonArrayEntry* polygonArray = NULL;// contains the polygon data from DrawPolygon, waiting to be processed
 int polygonArraySize = 0;
-UINT32* polygonIndexArray = NULL;// contains sorting pointers for polygonArray
 int polygonArrayAllocSize = 65536;
 
 FOutVector* unsortedVertexArray = NULL;// contains unsorted vertices and texture coordinates from DrawPolygon
@@ -51,7 +50,6 @@ void HWR_StartBatching(void)
 		finalVertexArray = malloc(finalVertexArrayAllocSize * sizeof(FOutVector));
 		finalVertexIndexArray = malloc(finalVertexArrayAllocSize * 3 * sizeof(UINT32));
 		polygonArray = malloc(polygonArrayAllocSize * sizeof(PolygonArrayEntry));
-		polygonIndexArray = malloc(polygonArrayAllocSize * sizeof(UINT32));
 		unsortedVertexArray = malloc(unsortedVertexArrayAllocSize * sizeof(FOutVector));
 	}
 
@@ -86,14 +84,12 @@ void HWR_ProcessPolygon(FSurfaceInfo *pSurf, FOutVector *pOutVerts, FUINT iNumPt
 		{
 			PolygonArrayEntry* new_array;
 			// ran out of space, make new array double the size
-			polygonArrayAllocSize *= 2;
-			new_array = malloc(polygonArrayAllocSize * sizeof(PolygonArrayEntry));
+			new_array = malloc(polygonArrayAllocSize * 2 * sizeof(PolygonArrayEntry));
 			memcpy(new_array, polygonArray, polygonArraySize * sizeof(PolygonArrayEntry));
 			free(polygonArray);
 			polygonArray = new_array;
 			// also need to redo the index array, dont need to copy it though
-			free(polygonIndexArray);
-			polygonIndexArray = malloc(polygonArrayAllocSize * sizeof(UINT32));
+			polygonArrayAllocSize *= 2;
 		}
 
 		while (unsortedVertexArraySize + (int)iNumPts > unsortedVertexArrayAllocSize)
@@ -116,7 +112,7 @@ void HWR_ProcessPolygon(FSurfaceInfo *pSurf, FOutVector *pOutVerts, FUINT iNumPt
 		polygonArray[polygonArraySize].texture = current_texture;
 		polygonArray[polygonArraySize].shader = (shader_target != SHADER_NONE) ? HWR_GetShaderFromTarget(shader_target) : shader_target;
 		polygonArray[polygonArraySize].horizonSpecial = horizonSpecial;
-		// default to maximum value so skybox ánd horizon lines come first
+		// default to maximum value so skybox ï¿½nd horizon lines come first
 		polygonArray[polygonArraySize].hash = INT32_MIN + polygonArraySize;
 		polygonArraySize++;
 
@@ -157,10 +153,8 @@ void HWR_ProcessPolygon(FSurfaceInfo *pSurf, FOutVector *pOutVerts, FUINT iNumPt
 
 static int comparePolygons(const void *p1, const void *p2)
 {
-	unsigned int index1 = *(const unsigned int*)p1;
-	unsigned int index2 = *(const unsigned int*)p2;
-	PolygonArrayEntry* poly1 = &polygonArray[index1];
-	PolygonArrayEntry* poly2 = &polygonArray[index2];
+	const PolygonArrayEntry* poly1 = p1;
+	const PolygonArrayEntry* poly2 = p2;
 	if ((poly1->hash & 0x80000000) != (poly2->hash & 0x80000000))
 		return (poly1->hash & 0x80000000) < (poly2->hash & 0x80000000) ? 1 : -1;
 	return poly1->hash - poly2->hash;
@@ -173,7 +167,7 @@ void HWR_RenderBatches(void)
     int finalVertexWritePos = 0;// position in finalVertexArray
 	int finalIndexWritePos = 0;// position in finalVertexIndexArray
 
-	int polygonReadPos = 0;// position in polygonIndexArray
+	int polygonReadPos = 0;// position in polygonIndex
 
 	int currentShader;
 	int nextShader = 0;
@@ -183,8 +177,6 @@ void HWR_RenderBatches(void)
 	FBITFIELD nextPolyFlags = 0;
 	FSurfaceInfo currentSurfaceInfo;
 	FSurfaceInfo nextSurfaceInfo;
-
-	int i;
 
     if (!currently_batching)
 		I_Error("HWR_RenderBatches called without starting batching");
@@ -206,15 +198,10 @@ void HWR_RenderBatches(void)
 	ps_hw_numcalls.value.i = ps_hw_numverts.value.i = 0;
 	ps_hw_numshaders.value.i = ps_hw_numtextures.value.i
 		= ps_hw_numpolyflags.value.i = ps_hw_numcolors.value.i = 1;
-	// init polygonIndexArray
-	for (i = 0; i < polygonArraySize; i++)
-	{
-		polygonIndexArray[i] = i;
-	}
 
 	// sort polygons
 	PS_START_TIMING(ps_hw_batchsorttime);
-	qsort(polygonIndexArray, polygonArraySize, sizeof(unsigned int), comparePolygons);
+	qsort(polygonArray, polygonArraySize, sizeof(PolygonArrayEntry), comparePolygons);
 	PS_STOP_TIMING(ps_hw_batchsorttime);
 	// sort order
 	// 1. shader
@@ -225,10 +212,10 @@ void HWR_RenderBatches(void)
 
 	PS_START_TIMING(ps_hw_batchdrawtime);
 
-	currentShader = polygonArray[polygonIndexArray[0]].shader;
-	currentTexture = polygonArray[polygonIndexArray[0]].texture;
-	currentPolyFlags = polygonArray[polygonIndexArray[0]].polyFlags;
-	currentSurfaceInfo = polygonArray[polygonIndexArray[0]].surf;
+	currentShader = polygonArray[0].shader;
+	currentTexture = polygonArray[0].texture;
+	currentPolyFlags = polygonArray[0].polyFlags;
+	currentSurfaceInfo = polygonArray[0].surf;
 	// For now, will sort and track the colors. Vertex attributes could be used instead of uniforms
 	// and a color array could replace the color calls.
 
@@ -267,8 +254,7 @@ void HWR_RenderBatches(void)
 		// reset write pos
 		// repeat loop
 
-		int index = polygonIndexArray[polygonReadPos++];
-		int numVerts = polygonArray[index].numVerts;
+		int numVerts = polygonArray[polygonReadPos].numVerts;
 		// before writing, check if there is enough room
 		// using 'while' instead of 'if' here makes sure that there will *always* be enough room.
 		// probably never will this loop run more than once though
@@ -289,7 +275,7 @@ void HWR_RenderBatches(void)
 			finalVertexIndexArray = new_index_array;
 		}
 		// write the vertices of the polygon
-		memcpy(&finalVertexArray[finalVertexWritePos], &unsortedVertexArray[polygonArray[index].vertsIndex],
+		memcpy(&finalVertexArray[finalVertexWritePos], &unsortedVertexArray[polygonArray[polygonReadPos].vertsIndex],
 			numVerts * sizeof(FOutVector));
 		// write the indexes, pointing to the fan vertexes but in triangles format
 		firstIndex = finalVertexWritePos;
@@ -302,15 +288,15 @@ void HWR_RenderBatches(void)
 			finalVertexIndexArray[finalIndexWritePos++] = finalVertexWritePos++;
 		}
 
-		if (polygonReadPos >= polygonArraySize)
+		if (polygonReadPos + 1 >= polygonArraySize)
 		{
 			stopFlag = true;
 		}
 		else
 		{
 			// check if a state change is required, set the change bools and next vars
-			int nextIndex = polygonIndexArray[polygonReadPos];
-			if (polygonArray[index].hash != polygonArray[nextIndex].hash)
+			int nextIndex = polygonReadPos+1;
+			if (polygonArray[polygonReadPos].hash != polygonArray[nextIndex].hash)
 			{
 				nextShader = polygonArray[nextIndex].shader;
 				nextTexture = polygonArray[nextIndex].texture;
@@ -356,6 +342,7 @@ void HWR_RenderBatches(void)
 				}
 			}
 		}
+		polygonReadPos++;
 
 		if (changeState || stopFlag)
 		{
