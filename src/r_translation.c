@@ -1,7 +1,7 @@
 // SONIC ROBO BLAST 2
 //-----------------------------------------------------------------------------
 // Copyright (C) 1998-2006 by Randy Heit.
-// Copyright (C) 2023-2024 by Sonic Team Junior.
+// Copyright (C) 2023-2025 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -1114,13 +1114,13 @@ static void R_ApplyTranslationRemap(remaptable_t* tr, UINT8* remap, skincolornum
 		PaletteRemap_Apply(remap, &tr->sources[i]);
 }
 
-UINT8* R_GetTranslationRemap(int id, skincolornum_t skincolor, INT32 skinnum)
+UINT8 *R_GetTranslationRemap(int id, skincolornum_t skincolor, INT32 skinnum)
 {
-	remaptable_t* tr = R_GetTranslationByID(id);
+	remaptable_t *tr = R_GetTranslationByID(id);
 	if (!tr)
 		return NULL;
 
-	if (!tr->num_sources || skincolor == SKINCOLOR_NONE)
+	if (!tr->num_sources || (skincolor == SKINCOLOR_NONE && skinnum >= 0))
 		return tr->remap;
 
 	if (!tr->skincolor_remaps)
@@ -1131,7 +1131,7 @@ UINT8* R_GetTranslationRemap(int id, skincolornum_t skincolor, INT32 skinnum)
 	if (!tr->skincolor_remaps[index])
 		tr->skincolor_remaps[index] = Z_Calloc(NUM_PALETTE_ENTRIES * (MAXSKINCOLORS - 1), PU_LEVEL, NULL);
 
-	colorcache_t* cache = tr->skincolor_remaps[index][skincolor - 1];
+	colorcache_t *cache = tr->skincolor_remaps[index][skincolor - 1];
 	if (!cache)
 	{
 		cache = Z_Calloc(sizeof(colorcache_t), PU_LEVEL, NULL);
@@ -1144,14 +1144,16 @@ UINT8* R_GetTranslationRemap(int id, skincolornum_t skincolor, INT32 skinnum)
 	return cache->colors;
 }
 
-static void R_UpdateTranslation(remaptable_t* tr, skincolornum_t skincolor, INT32 skinnum)
+static void R_UpdateTranslation(remaptable_t *tr, skincolornum_t skincolor, INT32 cache_index)
 {
-	if (!tr->num_sources || !tr->skincolor_remaps || !tr->skincolor_remaps[skinnum])
+	if (skincolor == SKINCOLOR_NONE
+	|| !R_IsSkinTranslationRemappable(R_CacheIndexToSkinTranslation(cache_index))
+	|| !tr->num_sources || !tr->skincolor_remaps || !tr->skincolor_remaps[cache_index])
 		return;
 
-	colorcache_t* cache = tr->skincolor_remaps[skinnum][skincolor];
+	colorcache_t *cache = tr->skincolor_remaps[cache_index][skincolor - 1];
 	if (cache)
-		R_ApplyTranslationRemap(tr, cache->colors, skincolor, skinnum);
+		R_ApplyTranslationRemap(tr, cache->colors, skincolor, cache_index);
 }
 
 void R_UpdateTranslationRemaps(skincolornum_t skincolor, INT32 skinnum)
