@@ -61,12 +61,6 @@ static boolean S_CheckQueue(void);
 #define SURROUND
 #endif
 
-#ifdef _WINDOWS
-consvar_t cv_samplerate = CVAR_INIT ("samplerate", "44100", 0, CV_Unsigned, NULL); //Alam: For easy hacking?
-#else
-consvar_t cv_samplerate = CVAR_INIT ("samplerate", "22050", 0, CV_Unsigned, NULL); //Alam: For easy hacking?
-#endif
-
 // stereo reverse
 consvar_t stereoreverse = CVAR_INIT ("stereoreverse", "Off", CV_SAVE, CV_OnOff, NULL);
 
@@ -270,7 +264,6 @@ void S_RegisterSoundStuff(void)
 	CV_RegisterVar(&precachesound);
 
 	CV_RegisterVar(&surround);
-	CV_RegisterVar(&cv_samplerate);
 	CV_RegisterVar(&cv_resetmusic);
 	CV_RegisterVar(&cv_resetmusicbyheader);
 	CV_RegisterVar(&cv_1upsound);
