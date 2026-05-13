@@ -711,7 +711,13 @@ void HWR_FreeMapTextures(void)
 	// now the heap don't have any 'user' pointing to our
 	// texturecache info, we can free it
 	if (gl_textures)
+	{
+		for (i = 0; i < gl_numtextures; i++)
+		{
+			Z_Free(gl_textures[i].mipmap.data);
+		}
 		free(gl_textures);
+	}
 	if (gl_flats)
 		free(gl_flats);
 	gl_textures = NULL;
