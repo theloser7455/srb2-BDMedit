@@ -47,6 +47,7 @@
 #include "p_local.h"
 #include "p_setup.h"
 #include "f_finale.h"
+#include "qs22k.h"
 #include "lua_hook.h"
 #include "lua_libs.h"
 

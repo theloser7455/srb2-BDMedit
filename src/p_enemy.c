@@ -27,6 +27,7 @@
 #include "i_video.h"
 #include "z_zone.h"
 #include "lua_hook.h"
+#include "qs22k.h"
 #include "m_cond.h" // SECRET_SKIN
 
 #ifdef HW3SOUND
