@@ -1878,11 +1878,10 @@ void P_XYMovement(mobj_t *mo)
 						FIXED_TO_FLOAT(AngleFixed(oldangle-newangle))
 						);*/
 
-		}
-		else if (predictedz - mo->z > abs(slopemom.z / 2) // Now check if we were supposed to stick to this slope
-			&& ((!(mo->eflags & MFE_VERTICALFLIP) && (mo->z <= mo->floorz)) // mo->z <= mo->floorz means 'only do this if we did a stairstep up'
-				|| ((mo->eflags & MFE_VERTICALFLIP) && (mo->z + mo->height >= mo->ceilingz))
-				|| (demoplayback && demoversion < 0x0011))) { // Always do this for old demos
+		} else if (predictedz-mo->z > abs(slopemom.z/2) // Now check if we were supposed to stick to this slope
+		&& ((!(mo->eflags & MFE_VERTICALFLIP) && (mo->z <= mo->floorz)) // mo->z <= mo->floorz means 'only do this if we did a stairstep up'
+		|| ((mo->eflags & MFE_VERTICALFLIP) && (mo->z+mo->height >= mo->ceilingz))
+		|| (demoplayback && demoversion < 0x0011))) { // Always do this for old demos
 			//CONS_Printf("%d-%d > %d\n", (predictedz), (mo->z), (slopemom.z/2));
 			P_SlopeLaunch(mo);
 		}
