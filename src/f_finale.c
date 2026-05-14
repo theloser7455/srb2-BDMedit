@@ -506,8 +506,11 @@ void F_StartIntro(void)
 	gameaction = ga_nothing;
 	paused = false;
 	CON_ToggleOff();
-	F_NewCutscene(introtext[0]);
+	
+	// In case menus are still up?!!
+	M_ClearMenus(true);
 
+	F_NewCutscene(introtext[0]);
 	intro_scenenum = 0;
 	finalecount = animtimer = skullAnimCounter = stoptimer = 0;
 	timetonext = introscenetime[intro_scenenum];
