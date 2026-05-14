@@ -12,4 +12,4 @@
 #define MODVERSION 57
 
 // Define this as a prerelease version suffix (pre#, RC#)
-#define BETAVERSION "BDM-nightly"
+#define BETAVERSION ""
