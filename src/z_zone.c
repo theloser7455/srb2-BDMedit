@@ -54,16 +54,17 @@ static boolean Z_calloc = false;
 typedef struct memblock_s
 {
 	void **user;
-	INT32 tag; // purgelevel
-	UINT32 id; // Should be ZONEID
+	size_t size; // excluding the block
 
-	size_t size; // including the header and blocks
-	size_t realsize; // size of real data only
+ 	#ifdef PARANOIA
+		UINT32 id; // Should be ZONEID
+	#endif
+		UINT8 tag; // purgelevel
 
-#ifdef ZDEBUG
-	const char *ownerfile;
-	INT32 ownerline;
-#endif
+	#ifdef ZDEBUG
+		const char *ownerfile;
+		INT32 ownerline;
+	#endif
 
 	struct memblock_s *next, *prev;
 } memblock_t;
@@ -245,14 +246,15 @@ void *Z_MallocAlign(size_t size, INT32 tag, void *user, INT32 alignbits)
 	block->ownerline = line;
 	block->ownerfile = file;
 #endif
-	block->size = sizeof (memblock_t) + size;
-	block->realsize = size;
+	block->size = size;
 
 #ifdef VALGRIND_CREATE_MEMPOOL
 	VALGRIND_CREATE_MEMPOOL(block, size, Z_calloc);
 #endif
 
+	#ifdef PARANOIA
 	block->id = ZONEID;
+	#endif
 
 	if (user != NULL)
 	{
@@ -361,10 +363,10 @@ void *Z_ReallocAlign(void *ptr, size_t size, INT32 tag, void *user, INT32 alignb
 	rez = Z_MallocAlign(size, tag, user, alignbits);
 #endif
 
-	if (size < block->realsize)
+	if (size < block->size)
 		copysize = size;
 	else
-		copysize = block->realsize;
+		copysize = block->size;
 
 	M_Memcpy(rez, ptr, copysize);
 
@@ -528,6 +530,7 @@ void Z_CheckHeap(INT32 i)
 #endif
 				);
 		}
+		#ifdef PARANOIA
 		if (block->id != ZONEID)
 		{
 			I_Error("Z_CheckHeap %d: block %u"
@@ -540,6 +543,7 @@ void Z_CheckHeap(INT32 i)
 #endif
 				);
 		}
+		#endif
 	}
 }
 
@@ -630,7 +634,7 @@ size_t Z_TagsUsage(INT32 lowtag, INT32 hightag)
 	{
 		if (rover->tag < lowtag || rover->tag > hightag)
 			continue;
-		cnt += rover->size + sizeof *rover;
+		cnt += rover->size + sizeof(memblock_t);
 	}
 
 	return cnt;
@@ -705,7 +709,7 @@ static void Command_Memdump_f(void)
 		if (block->tag >= mintag && block->tag <= maxtag)
 		{
 			char *filename = strrchr(block->ownerfile, PATHSEP[0]);
-			CONS_Printf("[%3d] %s (%s) bytes @ %s:%d\n", block->tag, sizeu1(block->size), sizeu2(block->realsize), filename ? filename + 1 : block->ownerfile, block->ownerline);
+			CONS_Printf("[%3d] %s (%s) bytes @ %s:%d\n", block->tag, sizeu1(block->size + sizeof(memblock_t)), sizeu2(block->size), filename ? filename + 1 : block->ownerfile, block->ownerline);
 		}
 }
 #endif
