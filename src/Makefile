@@ -67,7 +67,6 @@
 # MOBJCONSISTANCY=1 - ??
 # PACKETDROP=1 - ??
 # NOEXECINFO=1 - Disable stack trace dump support
-# NOLTO=1 - Disable link time optimizations
 # DEBUGMODE=1 - Enable various debugging capabilities.
 #               Also disables optimizations.
 #
@@ -245,10 +244,6 @@ debug_opts=-D_DEBUG
 else # build a normal optimized version
 debug_opts=-DNDEBUG
 opts+=-O3
-ifndef NOLTO
-opts+=-flto=auto
-libs+=-flto=auto
-endif
 endif
 
 # debug_opts also get passed to windres
