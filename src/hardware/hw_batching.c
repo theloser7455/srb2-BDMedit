@@ -13,7 +13,6 @@
 #include "hw_glob.h"
 #include "hw_batching.h"
 #include "../i_system.h"
-#include "../qs22k.h"
 
 // The texture for the next polygon given to HWR_ProcessPolygon.
 // Set with HWR_SetCurrentTexture.
@@ -117,7 +116,7 @@ void HWR_ProcessPolygon(FSurfaceInfo *pSurf, FOutVector *pOutVerts, FUINT iNumPt
 		polygonArray[polygonArraySize].texture = current_texture;
 		polygonArray[polygonArraySize].shader = (shader_target != SHADER_NONE) ? HWR_GetShaderFromTarget(shader_target) : shader_target;
 		polygonArray[polygonArraySize].horizonSpecial = horizonSpecial;
-		// default to maximum value so skybox and horizon lines come first
+		// default to maximum value so skybox �nd horizon lines come first
 		polygonArray[polygonArraySize].hash = INT32_MIN + polygonArraySize;
 		polygonArraySize++;
 

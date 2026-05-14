@@ -16,7 +16,6 @@
 
 #ifndef __QS22K__
 #define __QS22K__
-void qs22k(void *base, size_t nmemb, size_t size,
-int (*compar)(const void *, const void *));                                     
-#define qsort(base, n, size, comparator) qs22k(base, n, size, comparator)
+void qs22k(void* base, size_t nmemb, size_t size,
+    int (*compar)(const void*, const void*));
 #endif

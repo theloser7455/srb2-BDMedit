@@ -31,7 +31,6 @@
 #include "../z_zone.h"
 #include "i_tcp.h"
 #include "../d_main.h" // srb2home
-#include "../qs22k.h"
 
 //
 // NETWORKING

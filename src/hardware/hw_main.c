@@ -38,7 +38,6 @@
 #include "../g_game.h"
 #include "../st_stuff.h"
 #include "../i_system.h"
-#include "../qs22k.h"
 #include "../m_cheat.h"
 #include "../f_finale.h"
 #include "../r_things.h" // R_GetShadowZ
