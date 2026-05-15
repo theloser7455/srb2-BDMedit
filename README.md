@@ -1,4 +1,4 @@
-# Sonic Robo Blast 2 BDM-Edit
+# Sonic Robo Blast 2 BDMedit
 basically a "fork" of srb2 that basically adds merge/pull requests that seems Very likely to be added (or not i dont know)
 # Compiling
 also you cant use cmake to compile, im sorry
