@@ -7,4 +7,4 @@ also you cant use cmake to compile, im sorry
 
 ```pacman -S git make mingw-w64-x86_64-gcc```
 # Changelogs
-[Release V1](https://github.com/theloser7455/srb2-BDMedit/blob/79edfe7bbe429c0412b13653ebf671234ac4f275/Changelogs.MD#release-1-changelogs)
+[Release V1](https://github.com/theloser7455/srb2-BDMedit/blob/main/Changelogs.MD#release-1-changelogs)
