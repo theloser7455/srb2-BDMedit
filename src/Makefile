@@ -243,7 +243,7 @@ ifdef DEBUGMODE
 debug_opts=-D_DEBUG
 else # build a normal optimized version
 debug_opts=-DNDEBUG
-opts+=-O1
+opts+=-O3
 endif
 
 # debug_opts also get passed to windres

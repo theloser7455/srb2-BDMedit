@@ -1659,6 +1659,7 @@ int R_CountTexturesInTEXTURESLump(UINT16 wadNum, UINT16 lumpNum)
 		{
 			// CONS_Alert(CONS_ERROR, "Error parsing TEXTURES lump: Expected \"WALLTEXTURE\" or \"TEXTURE\", got \"%s\"\n",texturesToken);
 			Z_Free(texturesToken);
+			Z_Free((void *)texturesText);
 		}
 		texturesToken = M_GetToken(NULL);
 	}
