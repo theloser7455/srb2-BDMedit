@@ -54,10 +54,7 @@ void P_MixUp(mobj_t *thing, fixed_t x, fixed_t y, fixed_t z, angle_t angle,
 
 	if (thing->player)
 	{
-		if (thing->eflags & MFE_VERTICALFLIP)
-			thing->player->viewz = thing->z + thing->height - thing->player->viewheight;
-		else
-			thing->player->viewz = thing->z + thing->player->viewheight;
+		thing->player->viewz = thing->z + (thing->eflags & MFE_VERTICALFLIP) ? thing->height - thing->player->viewheight : thing->player->viewheight;
 
 		if (!thing->tracer)
 			thing->reactiontime = TICRATE/2; // don't move for about half a second
@@ -132,10 +129,7 @@ boolean P_Teleport(mobj_t *thing, fixed_t x, fixed_t y, fixed_t z, angle_t angle
 
 	if (thing->player)
 	{
-		if (thing->eflags & MFE_VERTICALFLIP)
-			thing->player->viewz = thing->z + thing->height - thing->player->viewheight;
-		else
-			thing->player->viewz = thing->z + thing->player->viewheight;
+		thing->player->viewz = thing->z + (thing->eflags & MFE_VERTICALFLIP) ? thing->height - thing->player->viewheight : thing->player->viewheight;
 
 		// don't run in place after a teleport
 		if (!dontstopmove)
@@ -143,12 +137,12 @@ boolean P_Teleport(mobj_t *thing, fixed_t x, fixed_t y, fixed_t z, angle_t angle
 			INT32 p;
 			// Search for any players you might be carrying, so you can get them off before they end up being taken with you!
 			for (p = 0; p < MAXPLAYERS; p++)
-				if (playeringame[p] && players[p].mo && players[p].powers[pw_carry] == CR_PLAYER && players[p].mo->tracer == thing)
-				{
-					players[p].powers[pw_carry] = CR_NONE;
-					P_SetTarget(&players[p].mo->tracer, NULL);
-					break;
-				}
+			if (playeringame[p] && players[p].mo && players[p].powers[pw_carry] == CR_PLAYER && players[p].mo->tracer == thing)
+			{
+				players[p].powers[pw_carry] = CR_NONE;
+				P_SetTarget(&players[p].mo->tracer, NULL);
+				break;
+			}
 			thing->player->cmomx = thing->player->cmomy = 0;
 			thing->player->rmomx = thing->player->rmomy = 0;
 			thing->player->speed = 0;

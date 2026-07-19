@@ -191,11 +191,9 @@ fixed_t P_ReturnThrustY(mobj_t *mo, angle_t angle, fixed_t move)
 //
 boolean P_AutoPause(void)
 {
-	// Don't pause even on menu-up or focus-lost in netgames or record attack
-	if (netgame || modeattacking || gamestate == GS_TITLESCREEN || (marathonmode && gamestate == GS_INTERMISSION))
-		return false;
-
-	return (menuactive || ( window_notinfocus && cv_pauseifunfocused.value ));
+	// Don't pause even on menu-up or focus-lost in netgames or record attack if those variables are used.
+	return (netgame || modeattacking || gamestate == GS_TITLESCREEN || (marathonmode && gamestate == GS_INTERMISSION)) ? false 
+	: (menuactive || (window_notinfocus && cv_pauseifunfocused.value));
 }
 
 //
@@ -311,13 +309,8 @@ boolean P_PlayerMoving(INT32 pnum)
 {
 	player_t *p = &players[pnum];
 
-	if (!Playing())
-		return false;
-
-	if (p->jointime < 5*TICRATE || p->playerstate == PST_DEAD || p->playerstate == PST_REBORN || p->spectator)
-		return false;
-
-	return gamestate == GS_LEVEL && p->mo && p->mo->health > 0
+	return (!Playing() || (p->jointime < 5 * TICRATE || p->playerstate == PST_DEAD || p->playerstate == PST_REBORN || p->spectator)) ? false 
+		: gamestate == GS_LEVEL && p->mo && p->mo->health > 0
 		&& (abs(p->rmomx) >= FixedMul(FRACUNIT/2, p->mo->scale)
 			|| abs(p->rmomy) >= FixedMul(FRACUNIT/2, p->mo->scale)
 			|| abs(p->mo->momz) >= FixedMul(FRACUNIT/2, p->mo->scale)
@@ -360,11 +353,9 @@ void P_GiveEmerald(boolean spawnObj)
 		for (i = 0; i < MAXPLAYERS; i++)
 		{
 			mobj_t *emmo;
-			if (!playeringame[i])
-				continue;
-			if (players[i].spectator)
-				continue;
-			if (!players[i].mo)
+			if (!playeringame[i] 
+				|| (players[i].spectator) 
+				|| (!players[i].mo))
 				continue;
 
 			emmo = P_SpawnMobjFromMobj(players[i].mo, 0, 0, players[i].mo->height, MT_GOTEMERALD);
@@ -404,10 +395,8 @@ void P_GiveFinishFlags(player_t *player)
 	angle_t angle = FixedAngle(player->mo->angle << FRACBITS);
 	UINT8 i;
 
-	if (!player->mo)
-		return;
-
-	if (!(netgame||multiplayer))
+	if (!player->mo 
+		|| (!(netgame || multiplayer)))
 		return;
 
 	for (i = 0; i < 3; i++)
@@ -457,14 +446,11 @@ UINT8 P_FindLowestMare(void)
 	// to find the egg capsule with the lowest mare
 	for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 	{
-		if (th->removing)
-			continue;
+		mo2 = (mobj_t*)th;
 
-		mo2 = (mobj_t *)th;
-
-		if (mo2->type != MT_EGGCAPSULE)
-			continue;
-		if (mo2->health <= 0)
+		if (th->removing 
+			|| (mo2->type != MT_EGGCAPSULE)
+			|| (mo2->health <= 0))
 			continue;
 
 		{
@@ -510,15 +496,11 @@ boolean P_TransferToNextMare(player_t *player)
 	// to find the closest axis point
 	for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 	{
-		if (th->removing)
-			continue;
+		mo2 = (mobj_t*)th;
 
-		mo2 = (mobj_t *)th;
-
-		if (mo2->type != MT_AXIS)
-			continue;
-
-		if (mo2->threshold != mare)
+		if (th->removing 
+			|| (mo2->type != MT_AXIS
+			|| (mo2->threshold != mare)))
 			continue;
 
 		dist = P_GetMobjLargeDistance2D(player->mo, mo2) - mo2->radius / FRACUNIT;
@@ -530,11 +512,8 @@ boolean P_TransferToNextMare(player_t *player)
 		}
 	}
 
-	if (closestaxis == NULL)
-		return false;
-
 	P_SetTarget(&player->mo->target, closestaxis);
-	return true;
+	return (closestaxis == NULL) ? false : true;
 }
 
 //
@@ -551,21 +530,18 @@ static mobj_t *P_FindAxis(INT32 mare, INT32 axisnum)
 	// to find the closest axis point
 	for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 	{
-		if (th->removing)
-			continue;
+		mo2 = (mobj_t*)th;
 
-		mo2 = (mobj_t *)th;
+		if (th->removing 
+			|| (mo2->type != MT_AXIS) 
+			|| (mo2->health != axisnum) 
+			|| (mo2->threshold != mare))
+			continue;
 
 		// Axis things are only at beginning of list.
 		if (!(mo2->flags2 & MF2_AXIS))
 			return NULL;
 
-		if (mo2->type != MT_AXIS)
-			continue;
-		if (mo2->health != axisnum)
-			continue;
-		if (mo2->threshold != mare)
-			continue;
 		return mo2;
 	}
 
@@ -586,21 +562,18 @@ static mobj_t *P_FindAxisTransfer(INT32 mare, INT32 axisnum, mobjtype_t type)
 	// to find the closest axis point
 	for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 	{
-		if (th->removing)
-			continue;
+		mo2 = (mobj_t*)th;
 
-		mo2 = (mobj_t *)th;
+		if (th->removing 
+			|| (mo2->type != type) 
+			|| (mo2->health != axisnum)
+			|| (mo2->threshold != mare))
+			continue;
 
 		// Axis things are only at beginning of list.
 		if (!(mo2->flags2 & MF2_AXIS))
 			return NULL;
 
-		if (mo2->type != type)
-			continue;
-		if (mo2->health != axisnum)
-			continue;
-		if (mo2->threshold != mare)
-			continue;
 		return mo2;
 	}
 
@@ -627,16 +600,12 @@ void P_TransferToAxis(player_t *player, INT32 axisnum)
 	// to find the closest axis point
 	for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 	{
-		if (th->removing)
-			continue;
+		mo2 = (mobj_t*)th;
 
-		mo2 = (mobj_t *)th;
-
-		if (mo2->type != MT_AXIS)
-			continue;
-		if (mo2->health != axisnum)
-			continue;
-		if (mo2->threshold != mare)
+		if (th->removing 
+			|| (mo2->type != MT_AXIS) 
+			|| (mo2->health != axisnum) 
+			|| (mo2->threshold != mare))
 			continue;
 
 		dist = P_GetMobjLargeDistance2D(player->mo, mo2) - mo2->radius / FRACUNIT;
@@ -719,11 +688,9 @@ static void P_DeNightserizePlayer(player_t *player)
 	// Check to see if the player should be killed.
 	for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 	{
-		if (th->removing)
-			continue;
-
-		mo2 = (mobj_t *)th;
-		if (mo2->type != MT_NIGHTSDRONE)
+		mo2 = (mobj_t*)th;
+		if (th->removing 
+			|| (mo2->type != MT_NIGHTSDRONE))
 			continue;
 
 		if (mo2->flags2 & MF2_AMBUSH)
@@ -1010,10 +977,8 @@ boolean P_PlayerInPain(player_t *player)
 		return false;
 
 	// no silly, sliding isn't pain
-	if (!(player->pflags & PF_SLIDING) && player->mo->state == &states[player->mo->info->painstate] && player->powers[pw_flashing])
-		return true;
-
-	if (P_IsPlayerInState(player, S_PLAY_STUN))
+	if (!(player->pflags & PF_SLIDING) && player->mo->state == &states[player->mo->info->painstate] && player->powers[pw_flashing] 
+		|| (P_IsPlayerInState(player, S_PLAY_STUN)))
 		return true;
 
 	return false;
@@ -1172,40 +1137,26 @@ boolean P_PlayerCanDamage(player_t *player, mobj_t *thing)
 	}
 
 	// Invinc/super. Not for Monitors.
-	if (!(thing->flags & MF_MONITOR) && (player->powers[pw_invulnerability] || player->powers[pw_super]))
-		return true;
-
-	// NiGHTS drill. Wasn't originally for monitors, but that's more an oversight being corrected than anything else.
-	if ((player->powers[pw_carry] == CR_NIGHTSMODE) && (player->pflags & PF_DRILLING))
-		return true;
-
-	// Jumping.
-	if ((player->pflags & PF_JUMPED)
-	&& (!(player->pflags & PF_NOJUMPDAMAGE)))
-		return true;
-
-	// Spinning.
-	if (player->pflags & PF_SPINNING)
-		return true;
-
-	// Shield stomp.
-	if (((player->powers[pw_shield] & SH_NOSTACK) == SH_ELEMENTAL || (player->powers[pw_shield] & SH_NOSTACK) == SH_BUBBLEWRAP) && (player->pflags & PF_SHIELDABILITY))
-		return true;
-
-	// pw_strong checks below here
-
-	// Omnidirectional attacks.
-	if (allatk || (player->powers[pw_strong] & STR_DASH))
-		return true;
-
-	// From the front.
-	if ((player->powers[pw_strong] & STR_PUNCH)
-	&& (player->drawangle - R_PointToAngle2(player->mo->x - player->mo->momx, player->mo->y - player->mo->momy, thing->x, thing->y) +  + ANGLE_90) < ANGLE_180)
-		return true;
-
-	// From the back.
-	if ((player->powers[pw_strong] & STR_TAIL)
-	&& (player->drawangle - R_PointToAngle2(player->mo->x - player->mo->momx, player->mo->y - player->mo->momy, thing->x, thing->y) +  + ANGLE_90) >= ANGLE_180)
+	if (!(thing->flags & MF_MONITOR) && (player->powers[pw_invulnerability] || player->powers[pw_super]) 
+		// NiGHTS drill. Wasn't originally for monitors, but that's more an oversight being corrected than anything else.
+		|| ((player->powers[pw_carry] == CR_NIGHTSMODE) && (player->pflags & PF_DRILLING)) 
+		// Jumping.
+		|| ((player->pflags & PF_JUMPED)
+		&& (!(player->pflags & PF_NOJUMPDAMAGE)))
+		// Spinning.
+		|| (player->pflags & PF_SPINNING)
+		// Shield stomp.
+		|| (((player->powers[pw_shield] & SH_NOSTACK) == SH_ELEMENTAL 
+		|| (player->powers[pw_shield] & SH_NOSTACK) == SH_BUBBLEWRAP) 
+		&& (player->pflags & PF_SHIELDABILITY)) 
+		// Omnidirectional attacks.
+		|| (allatk || (player->powers[pw_strong] & STR_DASH))
+		// From the front.
+		|| ((player->powers[pw_strong] & STR_PUNCH)
+		&& (player->drawangle - R_PointToAngle2(player->mo->x - player->mo->momx, player->mo->y - player->mo->momy, thing->x, thing->y) + +ANGLE_90) < ANGLE_180) 
+		// From the back.
+		|| ((player->powers[pw_strong] & STR_TAIL)
+		&& (player->drawangle - R_PointToAngle2(player->mo->x - player->mo->momx, player->mo->y - player->mo->momy, thing->x, thing->y) + +ANGLE_90) >= ANGLE_180))
 		return true;
 
 	// From the top/bottom.
@@ -1350,11 +1301,9 @@ void P_GivePlayerLives(player_t *player, INT32 numlives)
 		player->lives = 1;
 
 docooprespawn:
-	if (cv_coopstarposts.value)
-		return;
-	if (prevlives > 0)
-		return;
-	if (!player->spectator)
+	if (cv_coopstarposts.value 
+		|| (prevlives > 0) 
+		|| (!player->spectator))
 		return;
 	P_SpectatorJoinGame(player);
 }
@@ -1691,26 +1640,12 @@ boolean P_EvaluateMusicStatus(UINT16 status, const char *musname)
 				break;
 
 			case JT_SHOES:  // Speed shoes
-				if (players[i].powers[pw_sneakers] > 1 && !players[i].powers[pw_super])
-				{
-					//strlcpy(S_sfx[sfx_None].caption, "Speed shoes", 12);
-					//S_StartCaption(sfx_None, -1, players[i].powers[pw_sneakers]);
-					result = true;
-				}
-				else
-					result = false;
+				result = (players[i].powers[pw_sneakers] > 1 && !players[i].powers[pw_super]) ? true : false;
 				break;
 
 			case JT_INV: // Invincibility
 			case JT_MINV: // Mario Invincibility
-				if (players[i].powers[pw_invulnerability] > 1)
-				{
-					//strlcpy(S_sfx[sfx_None].caption, "Invincibility", 14);
-					//S_StartCaption(sfx_None, -1, players[i].powers[pw_invulnerability]);
-					result = true;
-				}
-				else
-					result = false;
+				result = (players[i].powers[pw_invulnerability] > 1) ? true : false;
 				break;
 
 			case JT_DROWN:  // Drowning
@@ -1811,13 +1746,9 @@ void P_RestoreMusic(player_t *player)
 //
 boolean P_IsObjectInGoop(mobj_t *mo)
 {
-	if (mo->player && mo->player->spectator)
-		return false;
 
-	if (mo->flags & MF_NOGRAVITY)
-		return false;
-
-	return ((mo->eflags & (MFE_UNDERWATER|MFE_GOOWATER)) == (MFE_UNDERWATER|MFE_GOOWATER));
+	return (mo->player && mo->player->spectator 
+		   || (mo->flags & MF_NOGRAVITY)) ? false : ((mo->eflags & (MFE_UNDERWATER|MFE_GOOWATER)) == (MFE_UNDERWATER|MFE_GOOWATER));
 }
 
 //
@@ -2189,13 +2120,9 @@ void P_SpawnThokMobj(player_t *player)
 	mobjtype_t type = player->thokitem;
 	fixed_t zheight;
 
-	if (player->skincolor == 0)
-		return;
-
-	if (player->spectator)
-		return;
-
-	if (!type)
+	if (player->skincolor == 0 
+		|| (player->spectator) 
+		|| (!type))
 		return;
 
 	if (type == MT_GHOST)
@@ -2253,13 +2180,9 @@ void P_SpawnSpinMobj(player_t *player, mobjtype_t type)
 	mobj_t *mobj;
 	fixed_t zheight;
 
-	if (player->skincolor == 0)
-		return;
-
-	if (player->spectator)
-		return;
-
-	if (!type)
+	if (player->skincolor == 0 
+		|| (player->spectator) 
+		|| (!type))
 		return;
 
 	if (type == MT_GHOST)
@@ -2397,18 +2320,13 @@ boolean P_InSpaceSector(mobj_t *mo) // Returns true if you are in space
 
 		for (rover = sector->ffloors; rover; rover = rover->next)
 		{
-			if (!(rover->fofflags & FOF_EXISTS))
-				continue;
-
-			if (!(rover->master->frontsector->specialflags & SSF_OUTERSPACE))
-				continue;
-			topheight    = P_GetFFloorTopZAt   (rover, mo->x, mo->y);
+			topheight = P_GetFFloorTopZAt(rover, mo->x, mo->y);
 			bottomheight = P_GetFFloorBottomZAt(rover, mo->x, mo->y);
 
-			if (mo->z + (mo->height/2) > topheight)
-				continue;
-
-			if (mo->z + (mo->height/2) < bottomheight)
+			if (!(rover->fofflags & FOF_EXISTS) 
+				|| (!(rover->master->frontsector->specialflags & SSF_OUTERSPACE)) 
+				|| (mo->z + (mo->height / 2) > topheight) 
+				|| (mo->z + (mo->height / 2) < bottomheight))
 				continue;
 
 			return true;
@@ -2659,19 +2577,13 @@ boolean P_InQuicksand(mobj_t *mo) // Returns true if you are in quicksand
 
 		for (rover = sector->ffloors; rover; rover = rover->next)
 		{
-			if (!(rover->fofflags & FOF_EXISTS))
-				continue;
-
-			if (!(rover->fofflags & FOF_QUICKSAND))
-				continue;
-
-			topheight    = P_GetFFloorTopZAt   (rover, mo->x, mo->y);
+			topheight = P_GetFFloorTopZAt(rover, mo->x, mo->y);
 			bottomheight = P_GetFFloorBottomZAt(rover, mo->x, mo->y);
 
-			if (mo->z + flipoffset > topheight)
-				continue;
-
-			if (mo->z + (mo->height/2) + flipoffset < bottomheight)
+			if (!(rover->fofflags & FOF_EXISTS) 
+				|| (!(rover->fofflags & FOF_QUICKSAND)) 
+				|| (mo->z + flipoffset > topheight) 
+				|| (mo->z + (mo->height / 2) + flipoffset < bottomheight))
 				continue;
 
 			return true;
@@ -2695,18 +2607,13 @@ boolean P_InJumpFlipSector(mobj_t *mo) // Returns true if you are in a jumpflip 
 
 		for (rover = sector->ffloors; rover; rover = rover->next)
 		{
-			if (!(rover->fofflags & FOF_EXISTS))
-				continue;
-
-			if (!(rover->master->frontsector->specialflags & SSF_JUMPFLIP))
-				continue;
-			topheight    = P_GetFFloorTopZAt   (rover, mo->x, mo->y);
+			topheight = P_GetFFloorTopZAt(rover, mo->x, mo->y);
 			bottomheight = P_GetFFloorBottomZAt(rover, mo->x, mo->y);
 
-			if (mo->z + (mo->height/2) > topheight)
-				continue;
-
-			if (mo->z + (mo->height/2) < bottomheight)
+			if (!(rover->fofflags & FOF_EXISTS) 
+				|| (!(rover->master->frontsector->specialflags & SSF_JUMPFLIP)) 
+				|| (mo->z + (mo->height / 2) > topheight) 
+				|| (mo->z + (mo->height / 2) < bottomheight))
 				continue;
 
 			return true;
@@ -2729,43 +2636,33 @@ static boolean P_PlayerCanBust(player_t *player, ffloor_t *rover)
 
 	switch (rover->busttype)
 	{
-	case BT_TOUCH: // Shatters on contact
-		return true;
-	case BT_SPINBUST: // Can be busted by spinning (either from jumping or spindashing)
-		if ((player->pflags & PF_SPINNING) && !(player->pflags & PF_STARTDASH))
+		case BT_TOUCH: // Shatters on contact
 			return true;
+		case BT_SPINBUST: // Can be busted by spinning (either from jumping or spindashing)
+			if ((player->pflags & PF_SPINNING) && !(player->pflags & PF_STARTDASH) 
+				|| ((player->pflags & PF_JUMPED) && !(player->pflags & PF_NOJUMPDAMAGE)))
+				return true;
 
-		if ((player->pflags & PF_JUMPED) && !(player->pflags & PF_NOJUMPDAMAGE))
-			return true;
+			/* FALLTHRU */
+		case BT_REGULAR:
+			// Spinning (and not jumping)
+			if ((player->pflags & PF_SPINNING) && !(player->pflags & PF_JUMPED) 
+				// Passive wall breaking
+				|| (player->charflags & SF_CANBUSTWALLS || player->powers[pw_strong] & (STR_WALL | STR_FLOOR | STR_CEILING | STR_DASH))
+				// Super
+				|| (player->powers[pw_super])
+				// NiGHTS drill
+				|| (player->pflags & PF_DRILLING)
+				// Recording for Metal Sonic
+				|| (metalrecording))
+				return true;
 
-		/* FALLTHRU */
-	case BT_REGULAR:
-		// Spinning (and not jumping)
-		if ((player->pflags & PF_SPINNING) && !(player->pflags & PF_JUMPED))
-			return true;
+			/* FALLTHRU */
+		case BT_STRONG: // Requires a "strong ability"
+			if (player->charflags & SF_CANBUSTWALLS || player->powers[pw_strong] & (STR_WALL|STR_FLOOR|STR_CEILING))
+				return true;
 
-		// Passive wall breaking
-		if (player->charflags & SF_CANBUSTWALLS || player->powers[pw_strong] & (STR_WALL|STR_FLOOR|STR_CEILING|STR_DASH))
-			return true;
-
-		// Super
-		if (player->powers[pw_super])
-			return true;
-
-		// NiGHTS drill
-		if (player->pflags & PF_DRILLING)
-			return true;
-
-		// Recording for Metal Sonic
-		if (metalrecording)
-			return true;
-
-		/* FALLTHRU */
-	case BT_STRONG: // Requires a "strong ability"
-		if (player->charflags & SF_CANBUSTWALLS || player->powers[pw_strong] & (STR_WALL|STR_FLOOR|STR_CEILING))
-			return true;
-
-		break;
+			break;
 	}
 	return false;
 }
@@ -2795,11 +2692,9 @@ static void P_CheckBustableBlocks(player_t *player)
 		ffloor_t *rover;
 		fixed_t topheight, bottomheight;
 
-		if (!node->m_sector)
+		if (!node->m_sector 
+			|| (!node->m_sector->ffloors))
 			break;
-
-		if (!node->m_sector->ffloors)
-			continue;
 
 		for (rover = node->m_sector->ffloors; rover; rover = rover->next)
 		{
@@ -2812,18 +2707,14 @@ static void P_CheckBustableBlocks(player_t *player)
 			// Height checks
 			if (player->mo->eflags & MFE_VERTICALFLIP)
 			{
-				if ((player->powers[pw_strong] & STR_FLOOR) && (!(player->powers[pw_strong] & STR_CEILING)) && player->mo->z > topheight)
-					continue;
-
-				if ((player->powers[pw_strong] & STR_CEILING) && (!(player->powers[pw_strong] & STR_FLOOR)) && player->mo->z + player->mo->height < bottomheight)
+				if ((player->powers[pw_strong] & STR_FLOOR) && (!(player->powers[pw_strong] & STR_CEILING)) && player->mo->z > topheight 
+					|| ((player->powers[pw_strong] & STR_CEILING) && (!(player->powers[pw_strong] & STR_FLOOR)) && player->mo->z + player->mo->height < bottomheight))
 					continue;
 			}
 			else
 			{
-				if ((player->powers[pw_strong] & STR_FLOOR) && (!(player->powers[pw_strong] & STR_CEILING)) && player->mo->z < bottomheight)
-					continue;
-
-				if ((player->powers[pw_strong] & STR_CEILING) && (!(player->powers[pw_strong] & STR_FLOOR)) && player->mo->z + player->mo->height > topheight)
+				if ((player->powers[pw_strong] & STR_FLOOR) && (!(player->powers[pw_strong] & STR_CEILING)) && player->mo->z < bottomheight 
+					|| ((player->powers[pw_strong] & STR_CEILING) && (!(player->powers[pw_strong] & STR_FLOOR)) && player->mo->z + player->mo->height > topheight))
 					continue;
 			}
 			if (player->powers[pw_strong] & (STR_FLOOR|STR_CEILING))
@@ -2835,10 +2726,8 @@ static void P_CheckBustableBlocks(player_t *player)
 			// Height checks
 			if (rover->bustflags & FB_ONLYBOTTOM)
 			{
-				if (player->mo->z + player->mo->momz + player->mo->height < bottomheight)
-					continue;
-
-				if (player->mo->z + player->mo->height > bottomheight)
+				if (player->mo->z + player->mo->momz + player->mo->height < bottomheight 
+					|| (player->mo->z + player->mo->height > bottomheight))
 					continue;
 			}
 			else
@@ -2846,26 +2735,20 @@ static void P_CheckBustableBlocks(player_t *player)
 				switch (rover->busttype)
 				{
 				case BT_TOUCH:
-					if (player->mo->z + player->mo->momz > topheight)
-						continue;
-
-					if (player->mo->z + player->mo->momz + player->mo->height < bottomheight)
+					if (player->mo->z + player->mo->momz > topheight 
+						|| (player->mo->z + player->mo->momz + player->mo->height < bottomheight))
 						continue;
 
 					break;
 				case BT_SPINBUST:
-					if (player->mo->z + player->mo->momz > topheight)
-						continue;
-
-					if (player->mo->z + player->mo->height < bottomheight)
+					if (player->mo->z + player->mo->momz > topheight 
+						|| (player->mo->z + player->mo->height < bottomheight))
 						continue;
 
 					break;
 				default:
-					if (player->mo->z >= topheight)
-						continue;
-
-					if (player->mo->z + player->mo->height < bottomheight)
+					if (player->mo->z >= topheight 
+						|| (player->mo->z + player->mo->height < bottomheight))
 						continue;
 
 					break;
@@ -2946,16 +2829,12 @@ static void P_CheckBouncySectors(player_t *player)
 				rover->bouncestrength = P_AproxDistance(rover->master->dx, rover->master->dy)/100;
 			}
 
-			if (!(rover->fofflags & FOF_BOUNCY))
-				continue;
-
 			topheight = P_GetFOFTopZ(player->mo, node->m_sector, rover, player->mo->x, player->mo->y, NULL);
 			bottomheight = P_GetFOFBottomZ(player->mo, node->m_sector, rover, player->mo->x, player->mo->y, NULL);
 
-			if (player->mo->z > topheight)
-				continue;
-
-			if (player->mo->z + player->mo->height < bottomheight)
+			if (!(rover->fofflags & FOF_BOUNCY) 
+				|| (player->mo->z > topheight) 
+				|| (player->mo->z + player->mo->height < bottomheight))
 				continue;
 
 			if (oldz < P_GetFOFTopZ(player->mo, node->m_sector, rover, oldx, oldy, NULL)
@@ -3019,10 +2898,8 @@ static void P_CheckQuicksand(player_t *player)
 
 	for (rover = player->mo->subsector->sector->ffloors; rover; rover = rover->next)
 	{
-		if (!(rover->fofflags & FOF_EXISTS))
-			continue;
-
-		if (!(rover->fofflags & FOF_QUICKSAND))
+		if (!(rover->fofflags & FOF_EXISTS) 
+			|| (!(rover->fofflags & FOF_QUICKSAND)))
 			continue;
 
 		topheight    = P_GetFFloorTopZAt   (rover, player->mo->x, player->mo->y);
@@ -3070,10 +2947,9 @@ static void P_CheckQuicksand(player_t *player)
 //
 static void P_CheckSneakerAndLivesTimer(player_t *player)
 {
-	if (player->powers[pw_extralife] == 1) // Extra Life!
-		P_RestoreMusic(player);
-
-	if (player->powers[pw_sneakers] == 1)
+	// If either the extra live or speed shoes music ends, restore the level's music
+	if (player->powers[pw_extralife] == 1 
+		|| (player->powers[pw_sneakers] == 1))
 		P_RestoreMusic(player);
 }
 
@@ -3374,10 +3250,7 @@ static void P_DoPlayerHeadSigns(player_t *player)
 
 	if (!P_MobjWasRemoved(sign) && splitscreen) // Hide the sign from yourself in splitscreen - In single-screen, it wouldn't get spawned if it shouldn't be visible
 	{
-		if (player == &players[displayplayer])
-			sign->drawonlyforplayer = &players[secondarydisplayplayer];
-		else
-			sign->drawonlyforplayer = &players[displayplayer];
+		sign->drawonlyforplayer = (player == &players[displayplayer])  ? &players[secondarydisplayplayer] : &players[displayplayer];
 
 #ifdef QUADS
 		if (splitscreen > 1) // Can be seen by at least two local views, so we need an extra copy of the sign
@@ -3490,10 +3363,10 @@ static void P_DoClimbing(player_t *player)
 							// Is there a FOF directly below this one that we can move onto?
 							for (roverbelow = glidesector->sector->ffloors; roverbelow; roverbelow = roverbelow->next)
 							{
-								if (!(roverbelow->fofflags & FOF_EXISTS) || !(roverbelow->fofflags & FOF_BLOCKPLAYER) || ((rover->fofflags & FOF_BUSTUP) && (player->charflags & SF_CANBUSTWALLS)))
-									continue;
-
-								if (roverbelow == rover)
+								if (!(roverbelow->fofflags & FOF_EXISTS) 
+									|| !(roverbelow->fofflags & FOF_BLOCKPLAYER) 
+									|| ((rover->fofflags & FOF_BUSTUP) && (player->charflags & SF_CANBUSTWALLS)) 
+									|| (roverbelow == rover))
 									continue;
 
 								bottomheight2 = P_GetFFloorBottomZAt(roverbelow, player->mo->x, player->mo->y);
@@ -3535,10 +3408,10 @@ static void P_DoClimbing(player_t *player)
 							// Is there a FOF directly below this one that we can move onto?
 							for (roverbelow = glidesector->sector->ffloors; roverbelow; roverbelow = roverbelow->next)
 							{
-								if (!(roverbelow->fofflags & FOF_EXISTS) || !(roverbelow->fofflags & FOF_BLOCKPLAYER) || ((rover->fofflags & FOF_BUSTUP) && (player->charflags & SF_CANBUSTWALLS)))
-									continue;
-
-								if (roverbelow == rover)
+								if (!(roverbelow->fofflags & FOF_EXISTS) 
+									|| !(roverbelow->fofflags & FOF_BLOCKPLAYER) 
+									|| ((rover->fofflags & FOF_BUSTUP) && (player->charflags & SF_CANBUSTWALLS)) 
+									|| (roverbelow == rover))
 									continue;
 
 								topheight2 = P_GetFFloorTopZAt(roverbelow, player->mo->x, player->mo->y);
@@ -3592,7 +3465,9 @@ static void P_DoClimbing(player_t *player)
 						ffloor_t *rover;
 						for (rover = glidesector->sector->ffloors; rover; rover = rover->next)
 						{
-							if (!(rover->fofflags & FOF_EXISTS) || !(rover->fofflags & FOF_BLOCKPLAYER) || ((rover->fofflags & FOF_BUSTUP) && (player->charflags & SF_CANBUSTWALLS)))
+							if (!(rover->fofflags & FOF_EXISTS) 
+								|| !(rover->fofflags & FOF_BLOCKPLAYER) 
+								|| ((rover->fofflags & FOF_BUSTUP) && (player->charflags & SF_CANBUSTWALLS)))
 								continue;
 
 							bottomheight = P_GetFFloorBottomZAt(rover, player->mo->x, player->mo->y);
@@ -3632,7 +3507,9 @@ static void P_DoClimbing(player_t *player)
 						ffloor_t *rover;
 						for (rover = glidesector->sector->ffloors; rover; rover = rover->next)
 						{
-							if (!(rover->fofflags & FOF_EXISTS) || !(rover->fofflags & FOF_BLOCKPLAYER) || ((rover->fofflags & FOF_BUSTUP) && (player->charflags & SF_CANBUSTWALLS)))
+							if (!(rover->fofflags & FOF_EXISTS) 
+								|| !(rover->fofflags & FOF_BLOCKPLAYER) 
+								|| ((rover->fofflags & FOF_BUSTUP) && (player->charflags & SF_CANBUSTWALLS)))
 								continue;
 
 							topheight = P_GetFFloorTopZAt(rover, player->mo->x, player->mo->y);
@@ -3717,15 +3594,11 @@ static void P_DoClimbing(player_t *player)
 
 			for (think = thlist[THINK_MAIN].next; think != &thlist[THINK_MAIN]; think = think->next)
 			{
-				if (think->function != (actionf_p1)T_Scroll)
-					continue;
+				scroller = (scroll_t*)think;
 
-				scroller = (scroll_t *)think;
-
-				if (scroller->type != sc_side)
-					continue;
-
-				if (scroller->affectee != player->lastsidehit)
+				if (think->function != (actionf_p1)T_Scroll 
+					|| (scroller->type != sc_side) 
+					|| (scroller->affectee != player->lastsidehit))
 					continue;
 
 				if (scroller->accel)
@@ -3765,10 +3638,7 @@ static void P_DoClimbing(player_t *player)
 			}
 		}
 
-		if (cmd->sidemove != 0 || cmd->forwardmove != 0)
-			climb = true;
-		else
-			climb = false;
+		climb = (cmd->sidemove != 0 || cmd->forwardmove != 0) ? true : false;
 
 		if (player->climbing && climb && (player->mo->momx || player->mo->momy || player->mo->momz)
 			&& !P_IsPlayerInState(player, S_PLAY_CLIMB))
@@ -3800,10 +3670,7 @@ static void P_DoClimbing(player_t *player)
 		}
 	}
 
-	if (cmd->sidemove != 0 || cmd->forwardmove != 0)
-		climb = true;
-	else
-		climb = false;
+	climb = (cmd->sidemove != 0 || cmd->forwardmove != 0) ? true : false;
 
 	if (player->climbing && climb && (player->mo->momx || player->mo->momy || player->mo->momz)
 		&& !P_IsPlayerInState(player, S_PLAY_CLIMB))
@@ -3860,19 +3727,9 @@ static boolean PIT_CheckSolidsTeeter(mobj_t *thing)
 	fixed_t thingtop = thing->z + thing->height;
 	fixed_t teeterertop = teeterer->z + teeterer->height;
 
-	if (!teeterer || !thing)
-		return true;
-
-	if (!(thing->flags & MF_SOLID))
-		return true;
-
-	if (thing->flags & MF_NOCLIP)
-		return true;
-
-	if (thing == teeterer)
-		return true;
-
-	if (thing->player && cv_tailspickup.value && !(gametyperules & GTR_HIDEFROZEN))
+	if (!teeterer || !thing || (!(thing->flags & MF_SOLID)) || (thing->flags & MF_NOCLIP) 
+		|| (thing == teeterer) 
+		|| (thing->player && cv_tailspickup.value && !(gametyperules & GTR_HIDEFROZEN)))
 		return true;
 
 	blockdist = teeterer->radius + thing->radius;
@@ -3884,9 +3741,8 @@ static boolean PIT_CheckSolidsTeeter(mobj_t *thing)
 
 	if (teeterer->eflags & MFE_VERTICALFLIP)
 	{
-		if (thingtop < teeterer->z)
-			return true;
-		if (thing->z > highesttop)
+		if (thingtop < teeterer->z 
+			|| (thing->z > highesttop))
 			return true;
 		highesttop = thing->z;
 		if (thing->z > teeterertop + tiptop)
@@ -3897,9 +3753,8 @@ static boolean PIT_CheckSolidsTeeter(mobj_t *thing)
 	}
 	else
 	{
-		if (thing->z > teeterertop)
-			return true;
-		if (thingtop < highesttop)
+		if (thing->z > teeterertop 
+			|| (thingtop < highesttop))
 			return true;
 		highesttop = thingtop;
 		if (thingtop < teeterer->z - tiptop)
@@ -3928,13 +3783,10 @@ static boolean PIT_CheckSolidsTeeter(mobj_t *thing)
 				if (thing->y + teeterdist > teeteryh)
 					teeteryh = thing->y + teeterdist;
 
-				if (teeterer->x < teeterxl)
-					return true;
-				if (teeterer->x > teeterxh)
-					return true;
-				if (teeterer->y < teeteryl)
-					return true;
-				if (teeterer->y > teeteryh)
+				if (teeterer->x < teeterxl 
+					|| (teeterer->x > teeterxh) 
+					|| (teeterer->y < teeteryl) 
+					|| (teeterer->y > teeteryh))
 					return true;
 
 				solidteeter = false; // you can stop teetering now!
@@ -4448,11 +4300,9 @@ static void P_DoSuperStuff(player_t *player)
 	mobj_t *spark;
 	ticcmd_t *cmd = &player->cmd;
 	if (player->mo->state >= &states[S_PLAY_SUPER_TRANS1]
-	&& player->mo->state < &states[S_PLAY_SUPER_TRANS6])
-		return; // don't do anything right now, we're in the middle of transforming!
-
-	if (player->powers[pw_carry] == CR_NIGHTSMODE)
-		return; // NiGHTS Super doesn't mix with normal super
+	&& player->mo->state < &states[S_PLAY_SUPER_TRANS6] 
+	|| (player->powers[pw_carry] == CR_NIGHTSMODE))
+		return; // don't do anything right now, we're in the middle of transforming! & NiGHTS Super doesn't mix with normal super
 
 	if (player->powers[pw_super])
 	{
@@ -4526,18 +4376,15 @@ static void P_DoSuperStuff(player_t *player)
 //
 boolean P_SuperReady(player_t *player)
 {
-	if (!player->powers[pw_super]
-	&& !player->powers[pw_invulnerability]
-	&& !player->powers[pw_tailsfly]
-	&& (player->charflags & SF_SUPER)
-	&& (player->pflags & PF_JUMPED)
-	&& !(player->powers[pw_shield] & SH_NOSTACK)
-	&& !(maptol & TOL_NIGHTS)
-	&& ALL7EMERALDS(emeralds)
-	&& (player->rings >= 50))
-		return true;
-
-	return false;
+	return (!player->powers[pw_super]
+		&& !player->powers[pw_invulnerability]
+		&& !player->powers[pw_tailsfly]
+		&& (player->charflags & SF_SUPER)
+		&& (player->pflags & PF_JUMPED)
+		&& !(player->powers[pw_shield] & SH_NOSTACK)
+		&& !(maptol & TOL_NIGHTS)
+		&& ALL7EMERALDS(emeralds)
+		&& (player->rings >= 50)) ? true : false;
 }
 
 //
@@ -4550,10 +4397,7 @@ void P_DoJump(player_t *player, boolean soundandstate, boolean allowflip)
 	fixed_t factor;
 	const fixed_t dist6 = FixedMul(FixedDiv(player->speed, player->mo->scale), player->actionspd)/20;
 
-	if (player->pflags & PF_JUMPSTASIS)
-		return;
-
-	if (!player->jumpfactor)
+	if (player->pflags & PF_JUMPSTASIS || (!player->jumpfactor))
 		return;
 
 	if (player->climbing)
@@ -4884,8 +4728,8 @@ static void P_DoSpinAbility(player_t *player, ticcmd_t *cmd)
 			case CA2_GUNSLINGER:
 				if (!player->mo->momz && onground && !player->weapondelay && canstand)
 				{
-					if (player->speed > FixedMul(10<<FRACBITS, player->mo->scale))
-					{}
+					if (player->speed > FixedMul(10 << FRACBITS, player->mo->scale))
+					break;
 					else
 					{
 						mobj_t *lockon = P_LookForEnemies(player, false, true);
@@ -5187,24 +5031,17 @@ void P_Telekinesis(player_t *player, fixed_t thrust, fixed_t range)
 
 	for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 	{
-		if (th->removing)
-			continue;
-
-		mo2 = (mobj_t *)th;
-
-		if (mo2 == player->mo)
-			continue;
-
-		if (!((mo2->flags & MF_SHOOTABLE && mo2->flags & MF_ENEMY) || mo2->type == MT_EGGGUARD || mo2->player))
-			continue;
-
+		mo2 = (mobj_t*)th;
 		dist = P_GetMobjDistance3D(player->mo, mo2);
 
-		if (range < dist)
+		if (th->removing 
+			|| (mo2 == player->mo) 
+			|| (!((mo2->flags & MF_SHOOTABLE && mo2->flags & MF_ENEMY) 
+			|| mo2->type == MT_EGGGUARD 
+			|| mo2->player)) 
+			|| (range < dist) 
+			|| (!P_CheckSight(player->mo, mo2))) // if your psychic powers can't "see" it don't bother
 			continue;
-
-		if (!P_CheckSight(player->mo, mo2))
-			continue; // if your psychic powers can't "see" it don't bother
 
 		an = R_PointToAngle2(player->mo->x, player->mo->y, mo2->x, mo2->y);
 
@@ -5854,17 +5691,13 @@ INT32 P_GetPlayerControlDirection(player_t *player)
 	fixed_t tempx = 0, tempy = 0;
 	angle_t tempangle, origtempangle;
 
-	if (!cmd->forwardmove && !cmd->sidemove)
-		return 0;
-
-	if (!player->mo->momx && !player->mo->momy)
+	if (!cmd->forwardmove && !cmd->sidemove 
+		|| (!player->mo->momx && !player->mo->momy))
 		return 0;
 
 	if (twodlevel || player->mo->flags2 & MF2_TWOD)
 	{
-		if (!cmd->sidemove)
-			return 0;
-		if (!player->mo->momx)
+		if (!cmd->sidemove || (!player->mo->momx))
 			return 0;
 		origtempangle = tempangle = 0; // relative to the axis rather than the player!
 		controlplayerdirection = R_PointToAngle2(0, 0, player->mo->momx, player->mo->momy);
@@ -6532,15 +6365,9 @@ static void P_NightsTransferPoints(player_t *player, fixed_t xspeed, fixed_t rad
 		player->mo->momy = FixedMul(FINESINE(fa),radius) - FixedMul(FINESINE(faold),radius);
 	}
 
-	if (player->exiting)
+	if (player->exiting 
+		|| (!P_CheckMove(player->mo, player->mo->x + player->mo->momx, player->mo->y + player->mo->momy, true)))
 		return;
-
-	if (!P_CheckMove(player->mo,
-				player->mo->x + player->mo->momx,
-				player->mo->y + player->mo->momy, true))
-	{
-		return;
-	}
 
 	{
 		const INT32 sequence = player->mo->target->threshold;
@@ -6559,18 +6386,17 @@ static void P_NightsTransferPoints(player_t *player, fixed_t xspeed, fixed_t rad
 		// Find next waypoint
 		for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 		{
-			if (th->removing)
-				continue;
+			mo2 = (mobj_t*)th;
 
-			mo2 = (mobj_t *)th;
+			if (th->removing 
+				|| (!(mo2->type == MT_AXISTRANSFER 
+				|| mo2->type == MT_AXISTRANSFERLINE) 
+				|| (mo2->threshold != sequence)))
+				continue;
 
 			// Axis things are only at beginning of list.
 			if (!(mo2->flags2 & MF2_AXIS))
 				break;
-			if (!(mo2->type == MT_AXISTRANSFER || mo2->type == MT_AXISTRANSFERLINE))
-				continue;
-			if (mo2->threshold != sequence)
-				continue;
 
 			if (player->pflags & PF_TRANSFERTOCLOSEST)
 			{
@@ -6595,18 +6421,17 @@ static void P_NightsTransferPoints(player_t *player, fixed_t xspeed, fixed_t rad
 		{
 			for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 			{
-				if (th->removing)
-					continue;
+				mo2 = (mobj_t*)th;
 
-				mo2 = (mobj_t *)th;
+				if (th->removing 
+					|| (!(mo2->type == MT_AXISTRANSFER 
+					|| mo2->type == MT_AXISTRANSFERLINE)) 
+					|| (mo2->threshold != sequence))
+					continue;
 
 				// Axis things are only at beginning of list.
 				if (!(mo2->flags2 & MF2_AXIS))
 					break;
-				if (!(mo2->type == MT_AXISTRANSFER || mo2->type == MT_AXISTRANSFERLINE))
-					continue;
-				if (mo2->threshold != sequence)
-					continue;
 
 				if (!transfer1)
 				{
@@ -6624,18 +6449,17 @@ static void P_NightsTransferPoints(player_t *player, fixed_t xspeed, fixed_t rad
 		{
 			for (th = thlist[THINK_MOBJ].next; th != &thlist[THINK_MOBJ]; th = th->next)
 			{
-				if (th->removing)
-					continue;
+				mo2 = (mobj_t*)th;
 
-				mo2 = (mobj_t *)th;
+				if (th->removing 
+					|| (!(mo2->type == MT_AXISTRANSFER 
+					|| mo2->type == MT_AXISTRANSFERLINE) 
+					|| (mo2->threshold != sequence)))
+					continue;
 
 				// Axis things are only at beginning of list.
 				if (!(mo2->flags2 & MF2_AXIS))
 					break;
-				if (!(mo2->type == MT_AXISTRANSFER || mo2->type == MT_AXISTRANSFERLINE))
-					continue;
-				if (mo2->threshold != sequence)
-					continue;
 
 				if (!transfer2)
 				{

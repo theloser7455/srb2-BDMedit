@@ -654,24 +654,24 @@ static void line_SpawnViaMapthingVertexes(const int linenum, const boolean spawn
 
 	switch(line->args[0])
 	{
-	case TMSP_FRONTFLOOR:
-		slopetoset = &line->frontsector->f_slope;
-		side = &sides[line->sidenum[0]];
-		break;
-	case TMSP_FRONTCEILING:
-		slopetoset = &line->frontsector->c_slope;
-		side = &sides[line->sidenum[0]];
-		break;
-	case TMSP_BACKFLOOR:
-		slopetoset = &line->backsector->f_slope;
-		side = &sides[line->sidenum[1]];
-		break;
-	case TMSP_BACKCEILING:
-		slopetoset = &line->backsector->c_slope;
-		side = &sides[line->sidenum[1]];
-		break;
-	default:
-		return;
+		case TMSP_FRONTFLOOR:
+			slopetoset = &line->frontsector->f_slope;
+			side = &sides[line->sidenum[0]];
+			break;
+		case TMSP_FRONTCEILING:
+			slopetoset = &line->frontsector->c_slope;
+			side = &sides[line->sidenum[0]];
+			break;
+		case TMSP_BACKFLOOR:
+			slopetoset = &line->backsector->f_slope;
+			side = &sides[line->sidenum[1]];
+			break;
+		case TMSP_BACKCEILING:
+			slopetoset = &line->backsector->c_slope;
+			side = &sides[line->sidenum[1]];
+			break;
+		default:
+			return;
 	}
 
 	*slopetoset = MakeViaMapthings(tag1, tag2, tag3, flags, spawnthinker);
@@ -824,30 +824,14 @@ static pslope_t *P_GetReferenceSlopeForMidtexture(line_t *line)
 		// Line has ML_MIDPEG, so use the floor slope
 		fixed_t frontheight = P_GetSectorFloorZAt(line->frontsector, line->v1->x, line->v1->y);
 		fixed_t backheight = P_GetSectorFloorZAt(line->backsector, line->v1->x, line->v1->y);
-
-		if (frontheight > backheight)
-		{
-			return line->frontsector->f_slope;
-		}
-		else
-		{
-			return line->backsector->f_slope;
-		}
+		return (frontheight > backheight) ? line->frontsector->f_slope : line->backsector->f_slope;
 	}
 	else
 	{
 		// Line does not have ML_MIDPEG, so use the ceiling slope
 		fixed_t frontheight = P_GetSectorCeilingZAt(line->frontsector, line->v1->x, line->v1->y);
 		fixed_t backheight = P_GetSectorCeilingZAt(line->backsector, line->v1->x, line->v1->y);
-
-		if (frontheight < backheight)
-		{
-			return line->frontsector->c_slope;
-		}
-		else
-		{
-			return line->backsector->c_slope;
-		}
+		return (frontheight < backheight) ? line->frontsector->c_slope : line->backsector->c_slope;
 	}
 
 	return NULL;
@@ -907,10 +891,7 @@ static void P_UpdateMidtextureSlopesForSector(sector_t *sector)
 // Creates a solid midtexture slope for the line if possible
 static void P_CreateSolidMidtextureSlope(line_t *line)
 {
-	if (line->backsector == NULL) // Ignore single-sided lines (of course)
-		return;
-
-	if ((line->flags & ML_MIDSOLID) == 0) // Ignore if the midtexture is not solid
+	if (line->backsector == NULL || ((line->flags & ML_MIDSOLID) == 0)) // Ignore single-sided lines (of course) OR Ignore if the midtexture is not solid
 		return;
 
 	pslope_t *ref = P_GetReferenceSlopeForMidtexture(line);
@@ -1117,14 +1098,7 @@ fixed_t P_GetWallTransferMomZ(mobj_t *mo, pslope_t *slope)
 	}
 
 	// now we set the actual final angle
-	if ((ang > ANGLE_90) != (ang + advanceAng > ANGLE_90)) // does advancing the angle push it past directly upwards?
-	{
-		ang = (upwards ? ANGLE_90 : InvAngle(ANGLE_90)); // hard cap of directly upwards
-	}
-	else
-	{
-		ang = slope->zangle + advanceAng;
-	}
+	ang = ((ang > ANGLE_90) != (ang + advanceAng > ANGLE_90)) ? (upwards ? ANGLE_90 : InvAngle(ANGLE_90)) : slope->zangle + advanceAng; // hard cap of directly upwards
 
 	slopemom.x = mo->momx;
 	slopemom.y = mo->momy;
@@ -1177,21 +1151,12 @@ void P_ButteredSlope(mobj_t *mo)
 {
 	fixed_t thrust;
 
-	if (!mo->standingslope)
-		return;
-
-	if (mo->standingslope->flags & SL_NOPHYSICS)
-		return; // No physics, no butter.
-
-	if (mo->flags & (MF_NOCLIPHEIGHT|MF_NOGRAVITY))
-		return; // don't slide down slopes if you can't touch them or you're not affected by gravity
+	if (!mo->standingslope || mo->standingslope->flags & SL_NOPHYSICS || (mo->flags & (MF_NOCLIPHEIGHT | MF_NOGRAVITY)))
+		return; // No physics, no butter. OR don't slide down slopes if you can't touch them or you're not affected by gravity or your just not standing on the slope
 
 	if (mo->player) {
-		if (abs(mo->standingslope->zdelta) < FRACUNIT/4 && !(mo->player->pflags & PF_SPINNING))
-			return; // Don't slide on non-steep slopes unless spinning
-
-		if (abs(mo->standingslope->zdelta) < FRACUNIT/2 && !(mo->player->rmomx || mo->player->rmomy))
-			return; // Allow the player to stand still on slopes below a certain steepness
+		if (abs(mo->standingslope->zdelta) < FRACUNIT/4 && !(mo->player->pflags & PF_SPINNING) || (abs(mo->standingslope->zdelta) < FRACUNIT / 2 && !(mo->player->rmomx || mo->player->rmomy)))
+			return; // Don't slide on non-steep slopes unless spinning or Allow the player to stand still on slopes below a certain steepness
 	}
 
 	thrust = FINESINE(mo->standingslope->zangle>>ANGLETOFINESHIFT) * 3 / 2 * (mo->eflags & MFE_VERTICALFLIP ? 1 : -1);

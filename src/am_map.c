@@ -941,31 +941,22 @@ static inline void AM_drawWalls(void)
 			SLOPEPARAMS(lines[i].backsector->c_slope, backc1,  backc2,  lines[i].backsector->ceilingheight)
 		}
 #undef SLOPEPARAMS
-
+		//Note: Reduced the amount of if statements in here and gone with the ? operator instead. -theloser
 		if (!lines[i].backsector) // 1-sided
 		{
-			if (lines[i].flags & ML_NOCLIMB)
-				AM_drawMline(&l, NOCLIMBWALLCOLORS);
-			else
-				AM_drawMline(&l, WALLCOLORS);
+			AM_drawMline(&l, (lines[i].flags & ML_NOCLIMB) ? NOCLIMBWALLCOLORS : WALLCOLORS);
 		}
 		else if ((backf1 == backc1 && backf2 == backc2) // Back is thok barrier
 				 || (frontf1 == frontc1 && frontf2 == frontc2)) // Front is thok barrier
 		{
 			if (backf1 == backc1 && backf2 == backc2
-				&& frontf1 == frontc1 && frontf2 == frontc2) // BOTH are thok barriers
+			&& frontf1 == frontc1 && frontf2 == frontc2) // BOTH are thok barriers
 			{
-				if (lines[i].flags & ML_NOCLIMB)
-					AM_drawMline(&l, NOCLIMBTSWALLCOLORS);
-				else
-					AM_drawMline(&l, TSWALLCOLORS);
+				AM_drawMline(&l, (lines[i].flags & ML_NOCLIMB) ? NOCLIMBTSWALLCOLORS : TSWALLCOLORS);
 			}
 			else
 			{
-				if (lines[i].flags & ML_NOCLIMB)
-					AM_drawMline(&l, NOCLIMBTHOKWALLCOLORS);
-				else
-					AM_drawMline(&l, THOKWALLCOLORS);
+				AM_drawMline(&l, (lines[i].flags & ML_NOCLIMB) ? NOCLIMBTHOKWALLCOLORS : THOKWALLCOLORS);
 			}
 		}
 		else
@@ -1073,10 +1064,7 @@ static inline void AM_drawPlayers(void)
 
 	for (i = 0; i < MAXPLAYERS; i++)
 	{
-		if (!playeringame[i] || players[i].spectator)
-			continue;
-
-		if (!players[i].mo)
+		if (!playeringame[i] || players[i].spectator || !players[i].mo)
 			continue;
 
 		p = &players[i];
